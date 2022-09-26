@@ -1,5 +1,5 @@
 ---
-title: "scRNAseq with seurat"
+title: "scRNAseq with Seurat"
 author: "Holly A. R. Giles"
 date: "`r doc_date()`"
 output:
@@ -60,6 +60,8 @@ A note on `Seurat` objects:
 
 Full description [here](https://github.com/satijalab/seurat/wiki). `Seurat` objects contain an `Assay` class, with slots for raw counts (\@counts slot), normalized data (\@data slot), and scaled data for dimensional reduction (\@scale.data slot), and `DimReduc` class. You can access and add data using `GetAssayData`, `SetAssayData`, `[['']]` and `$`.
 
+Note: You may get warnings about suppressed column names and feature names cannot have underscores ('\_'), replacing with dashes ('-').
+
 ```{r loadData}
 
 #continue from here, find where data is 
@@ -68,29 +70,27 @@ pbmc.data <- Read10X(data.dir = "../data/pbmc3k/filtered_gene_bc_matrices/hg19/"
 
 # Initialise the Seurat object with the raw (non-normalised data).
 pbmc <- CreateSeuratObject(counts = pbmc.data, project = "pbmc3k", min.cells = 3, min.features = 200)
+
 pbmc
+
 ```
 
 ```{r}
-# Lets examine a few genes in the first thirty cells
+# Lets examine a few genes in the first 30 cells
 pbmc.data[c("CD3D","TCL1A","MS4A1"), 1:30]
 ```
 
-The `.` values in the matrix represent 0s (no molecules detected). Since most values in an scRNA-seq matrix are 0, Seurat uses a sparse-matrix representation whenever possible. This results in significant memory and speed savings for Drop-seq/inDrop/10x data.
+The `.` values in the matrix represent 0s (no molecules detected). Since most values in an scRNA-seq matrix are 0, Seurat uses a sparse-matrix representation whenever possible. This results in significant memory and speed savings for Drop-seq/inDrop/10x data. 
 
-\``{r} dense.size <- object.size(as.matrix(pbmc.data)) dense.size sparse.size <- object.size(pbmc.data) sparse.size dense.size / sparse.size`
+# Pre-processing workflow
 
-</details>
-
- 
-
-# Standard pre-processing workflow
-
-The steps below encompass the standard pre-processing workflow for scRNA-seq data in Seurat. These represent the selection and filtration of cells based on QC metrics, data normalization and scaling, and the detection of highly variable features.
+The steps below encompass the pre-processing workflow for scRNA-seq data in Seurat. These represent the selection and filtration of cells based on QC metrics, data normalisation and scaling, and the detection of highly variable features.
 
 ## QC and selecting cells for further analysis
 
-Seurat allows you to easily explore QC metrics and filter cells based on any user-defined criteria. A few QC metrics [commonly used](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4758103/) by the community include
+Here we explore QC metrics and filter cells based on defined criteria.
+
+The QC metrics are as follows:
 
 -   The number of unique genes detected in each cell.
     -   Low-quality cells or empty droplets will often have very few genes
@@ -98,71 +98,64 @@ Seurat allows you to easily explore QC metrics and filter cells based on any use
 -   Similarly, the total number of molecules detected within a cell (correlates strongly with unique genes)
 -   The percentage of reads that map to the mitochondrial genome
     -   Low-quality / dying cells often exhibit extensive mitochondrial contamination
-    -   We calculate mitochondrial QC metrics with the `PercentageFeatureSet()` function, which calculates the percentage of counts originating from a set of features
-    -   We use the set of all genes starting with `MT-` as a set of mitochondrial genes
 
-```{r mito, fig.height=7, fig.width=13}
+### Unique genes and total molecules
+
+Check the metadata object to get the number of unique genes and total molecules (calculated during `CreateSeuratObject()`).
+
+```{r QC, fig.height=7, fig.width=13}
+    # Show QC metrics for the first 5 cells
+    head(pbmc@meta.data, 5)
+```
+
+### Mitochondrial reads 
+
+Calculate mitochondrial QC metrics with the `PercentageFeatureSet()` function, which calculates the percentage of counts originating from a set of features
+
+Use the set of all genes starting with `MT-` as a set of mitochondrial genes
+
+```{r mitochondrialReads, fig.height=7, fig.width=13}
 # The [[ operator can add columns to object metadata. This is a great place to stash QC stats
 pbmc[["percent.mt"]] <- PercentageFeatureSet(pbmc, pattern = "^MT-")
 ```
 
-<details>
+\### Visualise QC metrics and filter cells
 
-<summary>**Where are QC metrics stored in Seurat?**</summary>
-
--   The number of unique genes and total molecules are automatically calculated during `CreateSeuratObject()`
-
-    -   You can find them stored in the object meta data
-
-    ```{r qc, fig.height=7, fig.width=13}
-    # Show QC metrics for the first 5 cells
-    head(pbmc@meta.data, 5)
-    ```
-
-</details>
-
- 
-
-In the example below, we visualize QC metrics, and use these to filter cells.
-
--   We filter cells that have unique feature counts over 2,500 or less than 200
--   We filter cells that have \>5% mitochondrial counts
+-   Filter cells that have unique feature counts over 2,500 or less than 200
+-   Filter cells that have \>5% mitochondrial counts
 
 ```{r qc2, fig.height=7, fig.width=13}
 
-#Visualize QC metrics as a violin plot
+#Visualise QC metrics as a violin plot
 VlnPlot(pbmc, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
 
-# FeatureScatter is typically used to visualize feature-feature relationships, but can be used for anything calculated by the object, i.e. columns in object metadata, PC scores etc.
+# FeatureScatter is typically used to visualise feature-feature relationships, but can be used for anything calculated by the object, 
+# i.e. columns in object metadata, PC scores etc.
 
 plot1 <- FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "percent.mt") 
 plot2 <- FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "nFeature_RNA") 
 plot1 + plot2
 
+
+#filter based on QC metrics
 pbmc <- subset(pbmc, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
 ```
 
 ------------------------------------------------------------------------
 
-# Normalizing the data
+# Data normalisation
 
-After removing unwanted cells from the dataset, the next step is to normalize the data. By default, we employ a global-scaling normalization method "LogNormalize" that normalizes the feature expression measurements for each cell by the total expression, multiplies this by a scale factor (10,000 by default), and log-transforms the result. Normalized values are stored in `pbmc[["RNA"]]@data`.
+We employ a global-scaling normalisation method "LogNormalize" that normalises the feature expression measurements for each cell by the total expression, multiplies this by a scale factor (10,000 by default), and log-transforms the result. Normalised values are stored in `pbmc[["RNA"]]@data`.
 
-```{r normalize}
+```{r normaliseData}
 pbmc <- NormalizeData(pbmc, normalization.method = "LogNormalize", scale.factor = 1e4)
-```
-
-For clarity, in this previous line of code (and in future commands), we provide the default values for certain parameters in the function call. However, this isn't required and the same behavior can be achieved with:
-
-```{r normalize.default, eval = FALSE}
-pbmc <- NormalizeData(pbmc)
 ```
 
 # Identification of highly variable features (feature selection)
 
-We next calculate a subset of features that exhibit high cell-to-cell variation in the dataset (i.e, they are highly expressed in some cells, and lowly expressed in others). We and [others](https://www.nature.com/articles/nmeth.2645) have found that focusing on these genes in downstream analysis helps to highlight biological signal in single-cell datasets.
+We next calculate a subset of features that exhibit high cell-to-cell variation in the dataset (i.e, they are highly expressed in some cells, and lowly expressed in others). Focusing on these genes in downstream analysis helps to highlight **biological signal in single-cell datasets**.
 
-Our procedure in Seurat is described in detail [here](https://doi.org/10.1016/j.cell.2019.05.031), and improves on previous versions by directly modeling the mean-variance relationship inherent in single-cell data, and is implemented in the `FindVariableFeatures()` function. By default, we return 2,000 features per dataset. These will be used in downstream analysis, like PCA.
+The procedure in Seurat is described in detail [here](https://doi.org/10.1016/j.cell.2019.05.031), and is implemented in the `FindVariableFeatures()` function. By default, the function returns 2,000 features per dataset. These will be used in downstream analysis, like PCA.
 
 ```{r var_features, fig.height=5, fig.width=11}
 pbmc <- FindVariableFeatures(pbmc, selection.method = 'vst', nfeatures = 2000)
