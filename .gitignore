@@ -70,3 +70,5 @@ inst/figs/*.pdf
 inst/figs/
 inst/doc/*.xlsx
 
+#Cache
+scRNAseq_with_seurat_files/
