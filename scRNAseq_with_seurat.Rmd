@@ -34,12 +34,25 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r loadLibraries}
+```{r loadLibraries, include=FALSE}
 
 library(dplyr)
 library(Seurat)
 library(patchwork)
 library(ggplot2)
+
+```
+
+```{r plotDir, include=FALSE}
+
+plotDir = ifelse(exists(".standalone"), "", "../../inst/figs/") 
+if(plotDir!="") if(!file.exists(plotDir)) dir.create(plotDir)
+
+```
+
+```{r defineAesthetics, include=FALSE}
+
+source("/Users/HollyGiles/Documents/R/themes_colors.R")
 
 ```
 
@@ -228,7 +241,7 @@ pbmc <- RunPCA(pbmc, features = VariableFeatures(object = pbmc))
 
 Seurat provides several useful ways of visualising both cells and features that define the PCA, including `VizDimReduction()`, `DimPlot()`, and `DimHeatmap()`
 
-```{r pca_viz, message=TRUE}
+```{r pca_viz, message=TRUE, fig.path=plotDir, dev=c("png", "cairo_pdf")}
 # Examine and visualize PCA results a few different ways
 print(pbmc[['pca']], dims = 1:5, nfeatures = 5)
 VizDimLoadings(pbmc, dims = 1:2, reduction = 'pca')
@@ -386,7 +399,7 @@ There are several tools for visualising marker expression:
 
 5.  `DotPlot()`
 
-### Vln plot
+### Violin plot
 
 ```{r Vlnplots, fig.height=10, fig.width=15}
 VlnPlot(pbmc, features = c("MS4A1", "CD79A"))
@@ -431,7 +444,7 @@ Use canonical markers to easily match the unbiased clustering to known cell type
 
 ### Labelled plot
 
-```{r labelplot, fig.height=5, fig.width=9}
+```{r labelplot, fig.height=5, fig.width=9, fig.path=plotDir, dev=c("png", "cairo_pdf")}
 #define cluster IDs
 new.cluster.ids <- c("Naive CD4 T", "CD14+ Mono", "Memory CD4 T", "B", "CD8 T", "FCGR3A+ Mono", "NK", "DC", "Platelet")
 
