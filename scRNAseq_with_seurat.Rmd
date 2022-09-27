@@ -173,6 +173,8 @@ plot1 + plot2
 
 # Scaling the data
 
+## Linear Transformation
+
 Next, we apply a linear transformation ('scaling') that is a standard pre-processing step prior to dimensional reduction techniques like PCA. The `ScaleData()` function:
 
 -   Shifts the expression of each gene, so that the mean expression across cells is 0
@@ -180,40 +182,32 @@ Next, we apply a linear transformation ('scaling') that is a standard pre-proces
     -   This step gives equal weight in downstream analyses, so that highly-expressed genes do not dominate
 -   The results of this are stored in `pbmc[["RNA"]]@scale.data`
 
+Scale for all genes:
+
 ```{r regress, fig.height=7, fig.width=11, results='hide'}
 all.genes <- rownames(pbmc)
 pbmc <- ScaleData(pbmc, features = all.genes)
 ```
 
-<details>
+Faster option: scale only for previously identified variable features
 
-<summary>**This step takes too long! Can I make it faster?**</summary>
-
-Scaling is an essential step in the Seurat workflow, but only on genes that will be used as input to PCA. Therefore, the default in `ScaleData()` is only to perform scaling on the previously identified variable features (2,000 by default). To do this, omit the `features` argument in the previous function call, i.e.
+(Scaling is an essential step in the Seurat workflow, but only on genes that will be used as input to PCA. NB PCA and clustering results are unaffected by only scaling variable genes. However, Seurat heatmaps require genes to be scaled, to make sure highly-expressed genes don't dominate the heatmap).
 
 ```{r regressvar, fig.height=7, fig.width=11, results='hide',eval = FALSE}
 pbmc <- ScaleData(pbmc)
 ```
 
-Your PCA and clustering results will be unaffected. However, Seurat heatmaps (produced as shown below with `DoHeatmap()`) require genes in the heatmap to be scaled, to make sure highly-expressed genes don't dominate the heatmap. To make sure we don't leave any genes out of the heatmap later, we are scaling all genes in this tutorial.
+## Regress out unwanted sources of variation
 
-</details>
-
- 
-
-<details>
-
-<summary>**How can I remove unwanted sources of variation, as in Seurat v2?**</summary>
-
-In `Seurat v2` we also use the `ScaleData()` function to remove unwanted sources of variation from a single-cell dataset. For example, we could 'regress out' heterogeneity associated with (for example) cell cycle stage, or mitochondrial contamination. These features are still supported in `ScaleData()` in `Seurat v3`, i.e.:
+Use the `ScaleData()` function to remove unwanted sources of variation from a single-cell dataset and 'regress out' heterogeneity associated with e.g. cell cycle stage, or mitochondrial contamination.
 
 ```{r regressvarmt, fig.height=7, fig.width=11, results='hide',eval = FALSE}
 pbmc <- ScaleData(pbmc, vars.to.regress = 'percent.mt')
 ```
 
-However, particularly for advanced users who would like to use this functionality, we strongly recommend the use of our new normalization workflow, `SCTransform()`. The method is described in our [paper](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-019-1874-1), with a separate vignette using Seurat v3 [here](sctransform_vignette.html). As with `ScaleData()`, the function `SCTransform()` also includes a `vars.to.regress` parameter.
+In case I need to run more sophisticated normalisation:
 
-</details>
+For advanced users who would like to use this functionality, we strongly recommend the use of our new normalisation workflow, `SCTransform()`. The method is described in our [paper](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-019-1874-1), with a separate vignette using Seurat v3 [here](sctransform_vignette.html).
 
  
 
@@ -221,13 +215,17 @@ However, particularly for advanced users who would like to use this functionalit
 
 # Perform linear dimensional reduction
 
-Next we perform PCA on the scaled data. By default, only the previously determined variable features are used as input, but can be defined using `features` argument if you wish to choose a different subset.
+## Run PCA on the scaled data.   
+
+By default, only the previously determined variable features are used as input, but can be defined using `features` argument.
 
 ```{r pca,results='hide'}
 pbmc <- RunPCA(pbmc, features = VariableFeatures(object = pbmc))
 ```
 
-Seurat provides several useful ways of visualizing both cells and features that define the PCA, including `VizDimReduction()`, `DimPlot()`, and `DimHeatmap()`
+## Visualise the PCs
+
+Seurat provides several useful ways of visualising both cells and features that define the PCA, including `VizDimReduction()`, `DimPlot()`, and `DimHeatmap()`
 
 ```{r pca_viz, message=TRUE}
 # Examine and visualize PCA results a few different ways
@@ -236,19 +234,37 @@ VizDimLoadings(pbmc, dims = 1:2, reduction = 'pca')
 DimPlot(pbmc, reduction = 'pca')
 ```
 
-In particular `DimHeatmap()` allows for easy exploration of the primary sources of heterogeneity in a dataset, and can be useful when trying to decide which PCs to include for further downstream analyses. Both cells and features are ordered according to their PCA scores. Setting `cells` to a number plots the 'extreme' cells on both ends of the spectrum, which dramatically speeds plotting for large datasets. Though clearly a supervised analysis, we find this to be a valuable tool for exploring correlated feature sets.
+## PCA Heatmap
+
+`DimHeatmap()` allows for easy exploration of the primary sources of heterogeneity in a dataset, and can be useful when trying to decide which PCs to include for further downstream analyses. Both cells and features are ordered according to their PCA scores. Plotting a subset of cells by setting `cells` to a number plots the 'extreme' cells on both ends of the spectrum, which dramatically speeds plotting for large datasets. Though clearly a supervised analysis, we find this to be a valuable tool for exploring correlated feature sets.
+
+Visualise PC1
 
 ```{r single-heatmap}
 DimHeatmap(pbmc, dims = 1, cells = 500, balanced = TRUE)
 ```
 
+Visualise PC1 - PC15
+
 ```{r multi-heatmap, fig.height=15, fig.width=9}
 DimHeatmap(pbmc, dims = 1:15, cells = 500, balanced = TRUE)
 ```
 
-# Determine the 'dimensionality' of the dataset
+# Determine the dimensionality of the dataset
 
 To overcome the extensive technical noise in any single feature for scRNA-seq data, Seurat clusters cells based on their PCA scores, with each PC essentially representing a 'metafeature' that combines information across a correlated feature set. The top principal components therefore represent a robust compression of the dataset. However, how many components should we choose to include? 10? 20? 100?
+
+Three approaches to consider:
+
+1.  Supervised: exploring PCs to determine relevant sources of heterogeneity (as above). This could be used in conjunction with GSEA.
+
+2.  Implement a statistical test based on a random null model (a little more time-consuming for large datasets, and may not return a clear PC cutoff).
+
+3.  Heuristic method with `ElbowPlot` . Commonly used, and can be calculated instantly.
+
+    In the example here, all three approaches yielded similar results, but we might have been justified in choosing anything between PC 7-12 as a cutoff.
+
+Method 2:
 
 In [Macosko *et al*](http://www.cell.com/abstract/S0092-8674(15)00549-8), we implemented a resampling test inspired by the JackStraw procedure. We randomly permute a subset of the data (1% by default) and rerun PCA, constructing a 'null distribution' of feature scores, and repeat this procedure. We identify 'significant' PCs as those who have a strong enrichment of low p-value features.
 
@@ -258,11 +274,13 @@ pbmc <- JackStraw(pbmc, num.replicate = 100)
 pbmc <- ScoreJackStraw(pbmc, dims = 1:20)
 ```
 
-The `JackStrawPlot()` function provides a visualization tool for comparing the distribution of p-values for each PC with a uniform distribution (dashed line). 'Significant' PCs will show a strong enrichment of features with low p-values (solid curve above the dashed line). In this case it appears that there is a sharp drop-off in significance after the first 10-12 PCs.
+The `JackStrawPlot()` function provides a visualisation tool for comparing the distribution of p-values for each PC with a uniform distribution (dashed line). 'Significant' PCs will show a strong enrichment of features with low p-values (solid curve above the dashed line). In this case it appears that there is a sharp drop-off in significance after the first 10-12 PCs.
 
 ```{r jsplots, fig.height=6, fig.width=10}
 JackStrawPlot(pbmc, dims = 1:15)
 ```
+
+Method 3:
 
 An alternative heuristic method generates an 'Elbow plot': a ranking of principle components based on the percentage of variance explained by each one (`ElbowPlot()` function). In this example, we can observe an 'elbow' around PC9-10, suggesting that the majority of true signal is captured in the first 10 PCs.
 
@@ -270,13 +288,10 @@ An alternative heuristic method generates an 'Elbow plot': a ranking of principl
 ElbowPlot(pbmc)
 ```
 
-Identifying the true dimensionality of a dataset -- can be challenging/uncertain for the user. We therefore suggest these three approaches to consider. The first is more supervised, exploring PCs to determine relevant sources of heterogeneity, and could be used in conjunction with GSEA for example. The second implements a statistical test based on a random null model, but is time-consuming for large datasets, and may not return a clear PC cutoff. The third is a heuristic that is commonly used, and can be calculated instantly. In this example, all three approaches yielded similar results, but we might have been justified in choosing anything between PC 7-12 as a cutoff.
+Factors to consider, in addition to the above:
 
-We chose 10 here, but encourage users to consider the following:
-
--   Dendritic cell and NK aficionados may recognize that genes strongly associated with PCs 12 and 13 define rare immune subsets (i.e. MZB1 is a marker for plasmacytoid DCs). However, these groups are so rare, they are difficult to distinguish from background noise for a dataset of this size without prior knowledge.
--   We encourage users to repeat downstream analyses with a different number of PCs (10, 15, or even 50!). As you will observe, the results often do not differ dramatically.
--   We advise users to err on the higher side when choosing this parameter. For example, performing downstream analyses with only 5 PCs does significantly and adversely affect results.
+-   Repeat downstream analyses with a different number of PCs (10, 15, or even 50!) and the results often do not differ dramatically.
+-   Err on the higher side when choosing this parameter. For example, performing downstream analyses with only 5 PCs does significantly and adversely affect results.
 
 ------------------------------------------------------------------------
 
@@ -286,7 +301,7 @@ Seurat v3 applies a graph-based clustering approach, building upon initial strat
 
 As in PhenoGraph, we first construct a KNN graph based on the euclidean distance in PCA space, and refine the edge weights between any two cells based on the shared overlap in their local neighborhoods (Jaccard similarity). This step is performed using the `FindNeighbors()` function, and takes as input the previously defined dimensionality of the dataset (first 10 PCs).
 
-To cluster the cells, we next apply modularity optimization techniques such as the Louvain algorithm (default) or SLM [[SLM, Blondel *et al*., Journal of Statistical Mechanics]](http://dx.doi.org/10.1088/1742-5468/2008/10/P10008), to iteratively group cells together, with the goal of optimizing the standard modularity function. The `FindClusters()` function implements this procedure, and contains a resolution parameter that sets the 'granularity' of the downstream clustering, with increased values leading to a greater number of clusters. We find that setting this parameter between 0.4-1.2 typically returns good results for single-cell datasets of around 3K cells. Optimal resolution often increases for larger datasets. The clusters can be found using the `Idents()` function.
+To cluster the cells, we next apply modularity optimisation techniques such as the Louvain algorithm (default) or SLM [[SLM, Blondel *et al*., Journal of Statistical Mechanics]](http://dx.doi.org/10.1088/1742-5468/2008/10/P10008), to iteratively group cells together, with the goal of optimizing the standard modularity function. The `FindClusters()` function implements this procedure, and contains a resolution parameter that sets the 'granularity' of the downstream clustering, with increased values leading to a greater number of clusters. We find that setting this parameter between 0.4-1.2 typically returns good results for single-cell datasets of around 3K cells. Optimal resolution often increases for larger datasets. The clusters can be found using the `Idents()` function.
 
 ```{r cluster, fig.height=5, fig.width=7}
 pbmc <- FindNeighbors(pbmc, dims = 1:10)
@@ -414,3 +429,7 @@ sessionInfo()
 ```
 
 </details>
+
+go bakc and understand clustering a little more
+
+Next vignette
