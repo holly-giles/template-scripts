@@ -1,0 +1,4 @@
+cellranger count --id=NAME_OF_OUTPUT_FOLDER \
+   --fastqs=PATH_TO_FASTQ_FILES \
+   --sample=SUBSET_FASTQFILES_BY_SAMPLE_ID \
+   --transcriptome=/PATH_TO_REFERENCE i.e. /home/harg2/references/10xrnaseq/refdata-gex-GRCh38-2020-A

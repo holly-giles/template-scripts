@@ -69,7 +69,7 @@ Here we use human pancreatic islet cell datasets produced across four technologi
 
 ```{r loadData, eval=FALSE}
 
-#InstallData('panc8')
+# InstallData('panc8')
 
 ```
 # Preprocessing
@@ -196,7 +196,7 @@ table(pancreas.query$prediction.match)
 
 ```
 
-To verify this further, we can examine some canonical cell type markers for specific pancreatic islet cell populations. Note that even though some of these cell types are only represented by one or two cells (e.g. epsilon cells), we are still able to classify them correctly. 
+To verify this further, we can examine some canonical cell type markers for specific pancreatic islet cell populations. Note that even though some of these cell types are only represented by one or two cells (e.g. epsilon cells), we are still able to classify them correctly.  
 
 ## Validate prediction based on cell markers 
 ```{r vlnplots, fig.height=8}
