@@ -1,0 +1,1 @@
+cellranger aggr --id=NAME_OF_OUTPUT_FOLDER --csv=NAME_OF_CSV_FILE.csv
