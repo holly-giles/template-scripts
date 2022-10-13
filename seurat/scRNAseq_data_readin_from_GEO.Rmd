@@ -9,11 +9,6 @@ output:
       toc_float: yes
       code_folding: "hide" 
 ---
-
-set this up as a template
-the try for this data 
-
-then carry on with rest of analysis 
 ------------------------------------------------------------------------
 
 In this vignette, we read in a dataset of .... available at .... There are [number of cells] single cells that were sequenced on the [Illumina NextSeq 500]. The raw data can be found [here](insertlink).
@@ -71,42 +66,36 @@ source("/Users/HollyGiles/Documents/R/themes_colors.R")
 
 #Download data from GEO
 #see here for a description of different download formats: https://bioconductor.org/packages/devel/bioc/vignettes/GEOquery/inst/doc/GEOquery.html
+#if the uploader has done a good job: 
 mat <- getGEO("GSE...")
 GSE... <- getGEO('GSE...',GSEMatrix=TRUE)
-show(GSE...)
+#see count matrix 
+exprs(gse...$NAME_OF_Expression_SET) %>% head
 
-#Or get individual files: 
+
+#Or you can also get the individual files: 
+data.dir <- file.path("/Users/HollyGiles/Documents/Projects/singlecell-practice/data/Adams2020")
+
 #count matrix
-mat <- readMM(file = file.path(data.dir, "GSE136831_RawCounts_Sparse.mtx.gz"))
+#mat <- readMM(file = file.path("../../data/Adams2020/RawCounts_Sparse.mtx"))
+mat <- readMM(file = file.path(data.dir, "RawCounts_Sparse.mtx"))
 
 #barcodes / cells
-cells <- readLines(con =  file.path(data.dir, "GSE136831_AllCells.cellBarcodes.txt.gz"))
+cells <- readLines(con =  file.path(data.dir, "GSE136831_AllCells.cellBarcodes.txt"))
 
 #features
-features <- read.table(file = file.path(data.dir, "GSE136831_AllCells.GeneIDs.txt.gz"), header = TRUE)
+features <- read.table(file = file.path(data.dir, "GSE136831_AllCells.GeneIDs.txt"), header = TRUE)
 
-#Use biomart to get meta data 
-# biomaRt was being unreliable
-# mart <- useDataset(
-#     "hsapiens_gene_ensembl",
-#     useMart(biomart = "ENSEMBL_MART_ENSEMBL", host = 'ensembl.org')
-# )
-#
-# genes <- grep(pattern = "ENSG", x = features[, 2], value = TRUE)
-# gene_IDs <- rbind(
-#   getBM(filters = "ensembl_gene_id", attributes = c("ensembl_gene_id","hgnc_symbol"), values = genes[1:5000], mart = mart),
-#   getBM(filters = "ensembl_gene_id", attributes = c("ensembl_gene_id","hgnc_symbol"), values = genes[5001:10000], mart = mart),
-#   getBM(filters = "ensembl_gene_id", attributes = c("ensembl_gene_id","hgnc_symbol"), values = genes[10001:length(x = genes)], mart = mart)
-# )
-
-#get meta data directly
-gene_IDs <- read.csv(file = file.path(data.dir, "adams_gene_ids.csv"))
+#meta data
+meta <- read.table(file = file.path(data.dir, "GSE136831_AllCells.Samples.CellType.MetadataTable.txt.gz"), row.names = 1, head = TRUE)
 
 
-#add metadata 
+#Update gene names
+#Option 1: Use Biomart
+
+#Option 2: Use geneIDs file from GEO 
 rownames(x = mat) <- features[, 2]
 colnames(x = mat) <- cells
-meta <- read.table(file = file.path(data.dir, "GSE136831_AllCells.Samples.CellType.MetadataTable.txt.gz"), row.names = 1, head = TRUE)
 mat <- as(mat, "dgCMatrix")
 
 for (i in 1:nrow(x = gene_IDs)) {
@@ -122,6 +111,20 @@ for (i in 1:nrow(x = gene_IDs)) {
 }
 
 gc()
+
+```
+# Create Seurat object 
+```{r}
+
+ob <- CreateSeuratObject(
+  counts = mat,
+  meta.data = meta,
+)
+
+#add meta data 
+ob$dataset_origin <- "adams_2020"
+ob$donor <- ob$Subject_Identity
+ #etc
 
 
 ```
