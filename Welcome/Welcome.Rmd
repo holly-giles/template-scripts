@@ -1,0 +1,107 @@
+---
+title: "Han Lab Induction"
+author: "Holly A. R. Giles"
+date: "`r doc_date()`"
+output:
+  BiocStyle::html_document:
+      toc: yes
+      toc_depth: 3
+      toc_float: yes
+      code_folding: "hide" 
+---
+
+# Welcome to the Han lab
+
+In addition to the Cam Uni inductions, and the Milner inductions, here are some helpful tips to get you up and running in our lab:
+
+
+##VPN
+Add isntructions for VPN
+
+## termainl 
+get to grips with unix 
+
+## Downlaod R 
+Check out the tidyverse
+
+add bioconductor 
+keep i updated every 6 months 
+
+you might want to run anlyses in Rm akrown for repoducibility 
+
+we hahev a webpage 
+
+## add yourself to the webpage 
+
+
+## 1. Get access to servers and data storage
+
+If you're going to run high-throughput analyses or store large amounts of data, you need access to the servers.
+
+We currently have access to two servers (a third is coming soon!)
+
+**mti-ai-srv-01** and **mti-ai-srv-02**
+
+**mti-ai-srv-02** is the newer of the two, with more storage space and greater computational power. sudo rights are given to all users of **mti-ai-srv-01** butnot in **mti-ai-srv-02**, so if you need to install additional software you will need to contact the server maintainer (see below).
+
+To access either server, make sure you have contacted whoever is maintaining the server (see below) and asked them to make you an account. Once you have an account, you can connect as follows:
+
+1\. Make sure you are connected to the VPN.
+
+2\. Access the server by typing:
+
+`ssh username@mti-ai-srv-02.jcbc.private.cam.ac.uk`
+
+3\. For initial log in you need to set a password
+
+First type:
+
+`passwd`
+
+Then set your new password.
+
+4\. When you initially log in you will be in your `/home/username` directory. You can run your pipelines here. 5. `cd` to `/data/username`. This is where you can store your data. If this directory is missing, contact the person who maintains the server and ask them to make one for you.
+
+**Server maintenance:**
+
+Sanjay Rathee ([sr952\@cam.ac.uk](mailto:sr952@cam.ac.uk){.email}) currently maintains both servers and is your first point of contact.
+
+## 2. Version control
+
+
+## 3. R on the server
+
+When you need to run analyses in R that require more computational power, you can use RStudio on the server. Access RStudio [here](http://mti-ai-srv-02.jcbc.private.cam.ac.uk:8787) and log in with the same details you used when you set up server access.
+
+Anything else? especially for masters students?
+
+## Resources
+
+Need help with biology: 
+
+Need help with statistics: 
+https://www.huber.embl.de/msmb/
+
+Tutorials: 
+RNAseq? 
+
+Deseq 2
+
+YOu can also try 
+EdgeR
+Limma 
+
+ATACseq? 
+
+scRNAseq 
+Seuart
+
+scATACseq
+seugnac is agreat starting place
+
+Multiomics: 
+CHeck out: 
+MOFA
+
+
+Any more questions? Everyone will be very happy to help!
