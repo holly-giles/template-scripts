@@ -14,7 +14,7 @@ output:
 
 Context
 
-Add here and biocfilecache and set up website 
+Add here and Biocfilecache and set up website 
 
 
 ```{r setup, include=FALSE}
