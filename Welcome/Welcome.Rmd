@@ -1,6 +1,6 @@
 ---
-title: "Han Lab Induction"
-author: "Holly A. R. Giles"
+title: "MTI Computational Biology Group Induction"
+author: ""
 date: "`r doc_date()`"
 output:
   BiocStyle::html_document:
@@ -12,43 +12,71 @@ output:
 
 # Welcome to the Han lab
 
-In addition to the Cam Uni inductions, and the Milner inductions, here are some helpful tips to get you up and running in our lab:
+Welcome to the Han Lab, we hope you are settling in! In addition to the Cambridge University and MTI inductions, here are some helpful tips to get you up and running in our lab (Free free to skip points if you find they are irrelevant to you).
 
+------------------------------------------------------------------------
 
-##VPN
-Add isntructions for VPN
+## Communications
 
-## termainl 
-get to grips with unix 
+First and foremost, make sure you are set up on all communication channels:
 
-## Downlaod R 
-Check out the tidyverse
+1.  Make sure you are all set up on Microsoft Teams and Outlook for emails and video calls.
 
-add bioconductor 
-keep i updated every 6 months 
+2.  Download Zoom (we use this for group meetings).
 
-you might want to run anlyses in Rm akrown for repoducibility 
+3.  Get yourself added to the group mailing list: ask [admin\@milner.cam.ac.uk](mailto:admin@milner.cam.ac.uk){.email}.
 
-we hahev a webpage 
+4.  If you are starting a PhD or Postdoc position, get yourself added to the predoc or postdoc mailing lists. Contact Nikki Mann (Digital Communications Manager) at [ndo23\@cam.ac.uk](mailto:ndo23@cam.ac.uk){.email}.
 
-## add yourself to the webpage 
+5.  Join the group [Slack](http://hanlabhq.slack.com/) workspace.
 
+6.  Get added to the group Whatsapp (ask one of the admins: Holly, Namshik, Gehad or Georgia).
 
-## 1. Get access to servers and data storage
+7.  Note down the lab phone number (this will ring the phone on Namshik's desk): 01223 767079
+
+8.  Make sure you share any news/updates from us i.e., new paper, talks, posters, big progress, new projects etc.
+
+## VPN
+
+Download and connect to the VPN client.
+
+[Mac VPN install instructions](https://drive.google.com/file/d/15WQCUhgbiPUqYSQH5HUNV92ZWpHYgCiU/view?usp=sharing)
+
+[Windows VPN install instructions](https://drive.google.com/file/d/15bdy09xoGYTiLP4vMl4Xjj5VXDZDh74M/view?usp=sharing)
+
+## Download R
+
+If you plan to run most of your analyses with R, you will need to download the following:
+
+Get access to R [here](https://www.stats.bris.ac.uk/R/).
+
+Get access to RStudio [here](https://www.rstudio.com/products/rstudio/download/#download).
+
+## Add yourself to the webpage
+
+The Han group has a webpage at [www.hanlab.com](www.hanlab.com). Send a photo and a bio to Holly ([harg2\@cam.ac.uk](harg2@cam.ac.uk)), along with your Google Scholar, Orcid and GitHub accounts, so that your profile can be added to the webpage.
+
+In addition to group member profiles, we use the website to share resources (under the Resources tab). Each lab member can host their own webpage here, to share git repositories, shiny apps, packages and analyses. You might find it helpful to publish your rendered RMarkdowns here, as an electronic record of your research (see [here](https://www.huber.embl.de/users/giles/)) or you may want to share shiny apps here for collaborators to access (see [here](https://researchmind.co.uk)), it is up to you. Contact Holly to request an account on Hostinger, then go ahead and add your own webpage to the site.
+
+## Access servers and data storage
 
 If you're going to run high-throughput analyses or store large amounts of data, you need access to the servers.
 
-We currently have access to two servers (a third is coming soon!)
+We currently have access to two servers (a third is coming soon!):
 
 **mti-ai-srv-01** and **mti-ai-srv-02**
 
-**mti-ai-srv-02** is the newer of the two, with more storage space and greater computational power. sudo rights are given to all users of **mti-ai-srv-01** butnot in **mti-ai-srv-02**, so if you need to install additional software you will need to contact the server maintainer (see below).
+**mti-ai-srv-02** is the newer of the two, with more storage space and greater computational power, for more experienced users. `sudo` rights are given to most users of **mti-ai-srv-01** but not in **mti-ai-srv-02**, so if you need to install additional software you will need to contact the server maintainer (see below).
 
 To access either server, make sure you have contacted whoever is maintaining the server (see below) and asked them to make you an account. Once you have an account, you can connect as follows:
 
-1\. Make sure you are connected to the VPN.
+1\. Connect to the VPN
 
-2\. Access the server by typing:
+2\. Access the server by typing (with your raven username)
+
+`ssh username@mti-ai-srv-01.jcbc.private.cam.ac.uk`
+
+or
 
 `ssh username@mti-ai-srv-02.jcbc.private.cam.ac.uk`
 
@@ -60,48 +88,190 @@ First type:
 
 Then set your new password.
 
-4\. When you initially log in you will be in your `/home/username` directory. You can run your pipelines here. 5. `cd` to `/data/username`. This is where you can store your data. If this directory is missing, contact the person who maintains the server and ask them to make one for you.
+4\. When you initially log in you will be in your `/home/username` directory. You can run your pipelines here.
+
+5.  The home directories in both servers are too small if you need to storage large amounts of data. To store your data:
+    1.  On mti-01: `cd /mnt/raid0_data/` or `/mnt/raid5_data` and create a dir with your username
+
+    2.  On mti-02: `cd` to `/data/username`. This is where you can store your data. If this directory is missing, contact the person who maintains the server and ask them to make one for you.
 
 **Server maintenance:**
 
-Sanjay Rathee ([sr952\@cam.ac.uk](mailto:sr952@cam.ac.uk){.email}) currently maintains both servers and is your first point of contact.
+Gehad Youssef (gy260\@cam.ac.uk) maintains `mti-ai-srv-01` and Holly Giles ([harg2\@cam.ac.uk](mailto:sr952@cam.ac.uk){.email}) currently maintains `mti-ai-srv-02`. Contact them if you need help. If you are taking over as a server maintainer, see also the Server Maintenance document online.
 
-## 2. Version control
+## Server etiquette and house rules
 
+We have a few basic house rules for the servers:
 
-## 3. R on the server
+1.  In general mti-02 is reserved for jobs that require greater computational power, and for more experienced users.
+2.  Be reasonable with allocation of resources on either server.
+3.  Take care when deleting any data as there are no backups.
+4.  Take care when deleting software, check that no one else is using this first.
+5.  Keep back ups of your raw data on a separate hard drive.
+6.  Aim to use git version control on your scripts, as there are no backups of the server.
 
-When you need to run analyses in R that require more computational power, you can use RStudio on the server. Access RStudio [here](http://mti-ai-srv-02.jcbc.private.cam.ac.uk:8787) and log in with the same details you used when you set up server access.
+## R on the server
 
-Anything else? especially for masters students?
+When you need to run analyses in R that require more computational power, you can use RStudio on the server. Access RStudio [here](http://mti-ai-srv-01.jcbc.private.cam.ac.uk:8787) for mti-01 and [here](http://mti-ai-srv-02.jcbc.private.cam.ac.uk:8787) for mti-02 and log in with the same details you used when you set up server access. You will be able to access all files and data stored on `mti-ai-srv-01` and `mti-ai-srv-02`from here.
 
-## Resources
+## Version control
 
-Need help with biology: 
+Once you start writing code, you need to start tracking any changes you make with version control. You use a tracking system such as git to track changes in your code, and then make commits each time you add things to your scripts. You can then push your local changes (commits) to an online "git repository", and share these repositories with other collaborators.
 
-Need help with statistics: 
-https://www.huber.embl.de/msmb/
+If you don't already have one, make account on GitHub and start tracking of any changes to your code. If you are new to GitHub, you can find a good tutorial [here](https://learngitbranching.js.org).
 
-Tutorials: 
-RNAseq? 
+## Set up some basics in R
 
-Deseq 2
+Firstly, it is useful to install and familiarise yourself with the [tidyverse](https://www.tidyverse.org), a set of R packages that aid good practice in data handling, manipulation and visualisation. Install the complete tidyverse with:
 
-YOu can also try 
-EdgeR
-Limma 
+`install.packages("tidyverse")`
 
-ATACseq? 
+Also ensure to [install Bioconductor](https://www.bioconductor.org/install/), a repository of free open source software that facilitates rigorous and reproducible analysis of data from current and emerging biological assays.
 
-scRNAseq 
-Seuart
+You can do this as follows:
 
-scATACseq
-seugnac is agreat starting place
+`if (!require("BiocManager", quietly = TRUE))`
 
-Multiomics: 
-CHeck out: 
-MOFA
+`install.packages("BiocManager")`
 
+`BiocManager::install(version = "3.15")`
 
-Any more questions? Everyone will be very happy to help!
+Then check out some packages from Bioconductor e.g. `DESeq2` (For analysing transcriptomic data):
+
+`BiocManager::install("DESeq2")`
+
+You can check out the vignette by running: `browseVignettes("DESeq2")`
+
+Finally, for reproducibility purposes, it is often good practice to run analyses in [RMarkdown](https://rmarkdown.rstudio.com), and render html and pdf documents containing the results. The RMarkdown [Vignette](https://rmarkdown.rstudio.com/lesson-1.html) and [Cheatsheet](https://rmarkdown.rstudio.com/lesson-15.html) are good starting points.
+
+------------------------------------------------------------------------
+
+# Additional Resources
+
+Here are some good resources if you need help getting started in a particular area:
+
+## Resources for Biology
+
+[Molecular Biology of the Cell](https://www.ncbi.nlm.nih.gov/books/NBK21054/) is a classic in-depth text reference in cell biology, aimed at allowing non-expert readers to approach the subject. For more specific information, review papers e.g. [Nature Reviews Cancer](https://www.nature.com/nrc/aims) are a good place to start! The [Cambridge Institute of Continuing Education](https://www.ice.cam.ac.uk/courses/search/subject/biological-sciences) also offers a number of good [courses](https://www.ice.cam.ac.uk/courses/courses-subject/biological-sciences).
+
+## Resources to write good code in R
+
+Here are a few books, videos, and online resources to speed up progression through the R language.
+
+### For beginners
+
+Get familiar with the basic concepts of R:
+
+[R for Data Science](https://r4ds.had.co.nz/index.html) by Hadley Wickham, which is fully available online.
+
+[Teacup giraffes and statistics](https://tinystats.github.io/teacups-giraffes-and-statistics/index.html) is nicely illustrated. In addition to introducing the reader to R, it explains some fundamental statistical concepts.
+
+[Hands-on programming with R](https://rstudio-education.github.io/hopr/index.html) is explicitly written for non-programmers.
+
+[Datacamp's R courses](https://www.datacamp.com/courses/free-introduction-to-r), if you like videos.
+
+### More advanced
+
+[Advanced R](https://adv-r.hadley.nz/introduction.html#what-you-will-get) is the best resource to learn about some of the R internals because the book provides a detailed look at R as a programming language.
+
+**For R package development:**
+
+(1) [R Packages](https://r-pkgs.org/) written by Hadley Wickham
+
+(2) [Official CRAN manual](https://cran.r-project.org/doc/manuals/r-release/R-exts.html) (the authoritative source, but quite dense and difficult to parse as a newcomer)
+
+(3) Bioconductor package development resources: [general guidelines](https://www.bioconductor.org/developers/package-guidelines/) and [documentation](https://bioconductor.org/developers/package-submission/) of their package submission process (Bioconductor packages are subject to peer review).
+
+**Visualisation**
+
+[ggplot2](https://ggplot2.tidyverse.org/index.html) is the most popular plotting framework for R. The *gg* is short for grammar of graphics. The [ggplot2 book](https://ggplot2-book.org/introduction.html) explains these concepts and provides you with all the knowledge to make sophisticated visualisations. For more advanced ggplot2 topics, see the vignettes on [extending ggplot2](https://ggplot2.tidyverse.org/articles/extending-ggplot2.html) and using [ggplot2 in packages](https://ggplot2.tidyverse.org/articles/ggplot2-in-packages.html).
+
+[shiny](https://shiny.rstudio.com/) apps can be used for interactive visualisation of data
+
+**Performance optimisation**
+
+Check out the [Efficient R programming](https://csgillespie.github.io/efficientR/) book, [blog post](https://const-ae.name/post/performance-debugging-in-r-and-cpp/), [Rcpp](https://cran.r-project.org/web/packages/Rcpp/vignettes/Rcpp-introduction.pdf), [profvis](https://rstudio.github.io/profvis/), [xrprof](https://github.com/atheriel/xrprof), and [bench](https://bench.r-lib.org/).
+
+Additionally, a good way to keep on top of the latest developments in the R community is Twitter and specifically: [Hadley Wickham](https://twitter.com/hadleywickham), [Jenny Bryan](https://twitter.com/JennyBryan), [Stephen Turner](https://twitter.com/strnr), [Julia Silge](https://twitter.com/juliasilge), [David Robinson](https://twitter.com/drob). A good conference with videos available is [rstudio::global()](https://rstudio.com/conference/).
+
+### Coding style
+
+R has been traditionally a very flexible language which has led to several different coding styles. There isn't a single correct style, but it is good to be consistent and to avoid mixing different styles. For example, if your function arguments sometimes use a dot (na.rm), sometimes an underscore (max_iterations), and sometimes camel-case (showLegend), the user will continuously have to consult the help file. Inspiration for recommended coding styles are:
+
+1.  [tidyverse style guide](https://style.tidyverse.org)
+2.  [Bioconductor coding style](https://contributions.bioconductor.org/r-code.html#r-code)
+3.  [Laurent Gatto's advanced R course](https://github.com/lgatto/2016-02-25-adv-programming-EMBL)
+
+To aid consistency, there are R packages that analyse your code and give recommendations for improvement: `styler`, `lintr`, `strict`, `BiocCheck`, `rcmdcheck`.
+
+### R for biological data analysis
+
+To learn more about the connection of biology, statistics and data analysis, good general resources are:
+
+[Modern Statistics for Modern Biology](https://www.huber.embl.de/msmb/introduction.html) Excellent book covering all aspects of applying statistical methods to different biological data types
+
+[Data Analysis for the Life Sciences](http://rafalab.github.io/pages/harvardx.html) is a Harvard course with videos and notes by Rafael Irizarry and Michael Love
+
+[Orchestrating single-cell analysis](http://bioconductor.org/books/release/OSCA/overview.html) is a paper/online book on how to do single-cell data analysis with Bioconductor packages
+
+If you are looking for tools for specific data types, some good starting points are:
+
+**Genomics**
+
+Check out this [bioconductor workflow](http://bioconductor.org/help/course-materials/2015/EMBO/A01_RBiocForSequenceAnalysis.html).
+
+**Epigenomics**
+
+*For DNA Methylation data:*
+
+Check out [this bioconductor workflow](https://bioconductor.org/packages/release/workflows/vignettes/methylationArrayAnalysis/inst/doc/methylationArrayAnalysis.html).
+
+*For ATAC sequencing:*
+
+Bulk data: Check out the [ChrAccR](https://greenleaflab.github.io/ChrAccR/articles/overview.html) and [diffTF](https://difftf.readthedocs.io/en/latest/) software.
+
+Single-cell data: for pre-processing check out the [10x tutorials](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/using/tutorials), and for analysis see the [Signac](https://stuartlab.org/signac/) software.
+
+**Transcriptomics**
+
+Bulk data: for pre-processing check out [salmon](https://combine-lab.github.io/salmon/getting_started/) and for analysis check out [`DESeq2`](https://bioconductor.org/packages/release/bioc/html/DESeq2.html) and the [DESeq2 tutorial](https://bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.html). [EdgeR](https://bioconductor.org/packages/release/bioc/html/edgeR.html) and [Limma](https://bioconductor.org/packages/release/bioc/html/limma.html) are also popular tools.
+
+Single-cell data: for pre-processing check out the [10x tutorials](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/using/tutorials), and for analysis check out [Seurat](https://satijalab.org/seurat/) and the [Seurat tutorials](https://satijalab.org/seurat/articles/get_started.html). [scanpy](https://scanpy.readthedocs.io/en/stable/) is also a popular tool in Python.
+
+**Proteomics**
+
+Check out this Bioconductor [workflow](https://www.bioconductor.org/packages/release/data/experiment/vignettes/RforProteomics/inst/doc/RforProteomics.html).
+
+EMBL and EMBL-EBI offer regular courses in analysing specific datasets, see [here](https://www.embl.org/events/).
+
+### R for statistics and machine learning:
+
+There are several great books:
+
+[Machine learning and pattern recognition](https://www.microsoft.com/en-us/research/uploads/prod/2006/01/Bishop-Pattern-Recognition-and-Machine-Learning-2006.pdf)
+
+[Elements of statistical learning](https://web.stanford.edu/~hastie/Papers/ESLII.pdf) and [Introduction to statistical learning](https://static1.squarespace.com/static/5ff2adbe3fe4fe33db902812/t/6009dd9fa7bc363aa822d2c7/1611259312432/ISLR+Seventh+Printing.pdf)
+
+[Probabilistic Machine Learning: An Introduction](https://probml.github.io/pml-book/book1.html) and [Machine Learning: A probabilistic perspective](https://probml.github.io/pml-book/book0.html)
+
+Andrew Gelman's work:[Bayesian Data Analysis](http://www.stat.columbia.edu/~gelman/book/) and [Data Analysis Using Regression and Multilevel/Hierarchical Models](http://www.stat.columbia.edu/~gelman/arm/)
+
+## Resources in other coding languages
+
+### Unix
+
+If you are not familiar with Unix, you can find some useful tutorials [here](http://www.ee.surrey.ac.uk/Teaching/Unix/). (You will need to know some basic unix commands in order to access the server, make commits in git and perform other tasks on the command line.)
+
+### Python
+
+If you plan to use Python for some of your analyses, here are some good places to start:
+
+[A byte of Python](https://python.swaroopch.com) is a free book on programming using the Python language. It serves as a tutorial or guide to the Python language for a beginner audience. This [Python tutorial](https://www.w3schools.com/python/default.asp) is good if you want something a bit less basic.
+
+------------------------------------------------------------------------
+
+That's all for now. Any more questions? Just ask.
+
+Something missing? Suggestions? Let me know: [harg2\@cam.ac.uk](harg2@cam.ac.uk)
+
+*Credit: Holly Giles. With thanks to Constantin Ahlmann-Eltze for support with resources.*
