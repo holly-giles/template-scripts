@@ -1,0 +1,62 @@
+---
+title: "Server Maintenance"
+author: ""
+date: "`r doc_date()`"
+output:
+  BiocStyle::html_document:
+      toc: yes
+      toc_depth: 3
+      toc_float: yes
+      code_folding: "hide" 
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Here are some basic instructions and advice for maintaining the servers:
+
+# Adding a new account
+
+1.  Add the user: `sudo add user USERID`
+2.  Type in your password
+3.  Create a password for the new user
+4.  Check that this successfully created a user directory `cd /home/USERID`
+5.  On mti-01
+    1.  Create data folder: `cd /mnt/raid0_data/` or `/mnt/raid5_data` then `mkdir USERID`
+
+    2.  Make user the owner of data folder `sudo chown USERID`
+6.  On mti-02
+    1.  Create data folder `cd /data/`then `sudo mkdir USERID`
+
+    2.  Make user the owner of data folder `sudo chown USERID`
+
+# Restarting the server
+
+If there is a lot of background activity on the server, you may need to restart it. Give people notice and time to finish up their jobs, and then run:
+
+# Killing jobs
+
+If a job is taking up too many resources, or too much time, you can kill it as follows:
+
+# Updating R and R studio
+
+Every six months, R Studio needs to be updated. You can do this as follows:
+
+# Installing new software
+
+`pip install` `conda install`\<- explain
+
+# Updating software
+
+# Keeping security up to date
+
+Run `sudo apd update` whenever you install new software, to keep security up to date
+
+# Giving sudo access to other users
+
+All postdocs should have sudo rights on the mti-01 server. To add new postdocs to the list of users with sudo rights you can:
+
+# Setting up jupiter notebooks for users
+
+You can use jupiter notebooks similarly to RStudio as follows:
