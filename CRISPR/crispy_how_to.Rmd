@@ -1,0 +1,38 @@
+---
+title: "CRISPR screen how to "
+author: "Holly A. R. Giles"
+date: "`r doc_date()`"
+output:
+  BiocStyle::html_document:
+      toc: yes
+      toc_depth: 3
+      toc_float: yes
+      code_folding: "hide" 
+---
+
+------------------------------------------------------------------------
+
+This vignette explains the steps to go through from raw fastq files downloaded from the core facility, through to analysis of CRISPR screening data. It also demonstrates different packages for downstream analysis. 
+
+# Initial QC check
+
+1.  Check all data files are present
+
+    What to expect
+
+2.  (usually the core fac will have run bcl2fastq, which means you dont need to run mkfastq with cellRanger)
+
+3.  Run an mds5sums check
+
+    Here's how:
+
+4.  Take a look at the QC file
+
+    How to interpret:
+
+# Running alignments
+
+1. 
+
+# Running ... package to find targets
+

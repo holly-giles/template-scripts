@@ -1,0 +1,81 @@
+---
+title: "Integration and UMAPs for epithelial libraries"
+author: "Holly A. R. Giles"
+date: "`r doc_date()`"
+output:
+  BiocStyle::html_document:
+      toc: yes
+      toc_depth: 3
+      toc_float: yes
+      code_folding: "hide" 
+---
+
+------------------------------------------------------------------------
+
+This vignette explains the steps to go through from raw fastq files downloaded from the core facility, through to analysis with Seurat. It also demonstrates different packages for cell-cell communication analyses and pseudotime analsyes.
+
+# Initial QC check
+
+1.  Check all data files are present
+
+    What to expect
+
+2.  (usually the core fac will have run bcl2fastq, which means you dont need to run mkfastq with cellRanger)
+
+3.  Run an mds5sums check
+
+    Here's how:
+
+4.  Take a look at the QC file
+
+    How to interpret:
+
+# Running cellRanger
+
+1.  Change the file naming to be compatible with cellRanger pipelines
+
+    1.  Use this script: csci_to_cellRanger.py
+
+    2.  Exceture: `python3 csci_to_cellRanger.py`
+
+2.  Add a reference file to the folder containing your fastqs
+
+    1.  Check you have the most update to date reference (check this is the most up to date [here](https://support.10xgenomics.com/single-cell-gene-expression/software/downloads/latest))
+
+    2.  Download the reference
+
+        `wget https://cf.10xgenomics.com/supp/cell-exp/refdata-gex-GRCh38-2020-A.tar.gz`
+
+    3.  Then unpack the tar file:
+
+        `tar -xzvf refdata-gex-GRCh38-2020-A.tar.gz`
+
+3.  Set up your cellRanger counts script
+
+    1.  Use this template
+
+    2.  Update the library names
+
+    3.  Update the reference name
+
+4.  Run on a screen
+
+    1.  `screen`
+
+    2.  ctrl + a + d to detach the screen
+
+    3.  screen -r to resume screen
+
+5.  
+
+6.  
+
+# Running Seurat to generate a UMAP
+
+# Downstream analyses
+
+## Differential expression analysis
+
+## Pseudotime analyses
+
+## Cell-Cell communication analyses
