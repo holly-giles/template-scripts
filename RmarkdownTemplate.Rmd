@@ -1,0 +1,98 @@
+---
+title: 'Title'
+author: "Holly A. R. Giles"
+date: "`r doc_date()`"
+output:
+  BiocStyle::html_document:
+      toc: yes
+      toc_depth: 3
+      toc_float: yes
+      code_folding: "hide" 
+---
+
+# Title
+
+Context
+
+Add here and biocfilecache and set up website 
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Set up 
+Load libraries
+```{r loadLibraries, cache = FALSE}
+
+```
+
+Set plot directory
+```{r plotDir}
+
+plotDir = ifelse(exists(".standalone"), "", "../../inst/figs/")
+if(plotDir!="") if(!file.exists(plotDir)) dir.create(plotDir)
+
+```
+
+
+## Load data  
+```{r loadData}
+
+load( ".RData")
+
+```
+
+
+## Define Aesthetics
+```{r defineAesthetics}
+
+source("/R/themes_colors.R")
+
+```
+
+## Analaysis
+### Part 1    
+Explanation & Context 
+```{r Part1, fig.path=plotDir, dev=c("png", "cairo_pdf"), fig.width=..., fig.height=...}
+
+```
+
+
+### Part 2
+Explanation
+```{r Part2, fig.path=plotDir, dev=c("png", "cairo_pdf"), fig.width=8, fig.height = 5}
+
+```
+
+
+## Assemble Figure / Conclusion
+```{r, Figure, fig.height=..., fig.width=..., fig.path=plotDir, dev=c("png", "cairo_pdf")}
+
+tp <- theme(plot.tag=element_text(size = 30, face="plain"))
+
+design1 <-"
+  ABBC
+  DDEE
+"
+
+Figure <-
+  
+  wrap_elements(part1) + tp+
+  wrap_elements(part2) + tp+
+  
+  plot_annotation(tag_levels = "A", title="Figure", theme = theme(title=element_text(size = 20))) +
+  plot_layout(design = design1, heights = c(0.7,1.2), width=c(1,.5,1,1.1))
+
+
+Figure
+```
+
+
+## Appendix
+```{r appendix}
+
+Sys.info()
+sessionInfo()
+
+```
