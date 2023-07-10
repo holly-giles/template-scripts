@@ -26,7 +26,7 @@ First and foremost, make sure you are set up on all communication channels:
 
 3.  Get yourself added to the group mailing list: ask [admin\@milner.cam.ac.uk](mailto:admin@milner.cam.ac.uk){.email}.
 
-4.  If you are starting a PhD or Postdoc position, get yourself added to the predoc or postdoc mailing lists. Contact Nikki Mann (Digital Communications Manager) at [ndo23\@cam.ac.uk](mailto:ndo23@cam.ac.uk){.email}.
+4.  If you are starting a Postdoc position, get yourself added to the postdoc mailing list. Contact Nikki Mann (Digital Communications Manager) at [ndo23\@cam.ac.uk](mailto:ndo23@cam.ac.uk){.email}.
 
 5.  Join the group [Slack](http://hanlabhq.slack.com/) workspace.
 
@@ -52,11 +52,14 @@ Get access to R [here](https://www.stats.bris.ac.uk/R/).
 
 Get access to RStudio [here](https://www.rstudio.com/products/rstudio/download/#download).
 
+```{r include = FALSE, eval = FALSE}
 ## Add yourself to the webpage
 
-The Han group has a webpage at [www.hanlab.com](www.hanlab.com). Send a photo and a bio to Holly ([harg2\@cam.ac.uk](harg2@cam.ac.uk)), along with your Google Scholar, Orcid and GitHub accounts, so that your profile can be added to the webpage.
+#The Han group has a webpage at [www.hanlab.com](www.hanlab.com). Send a photo and a bio to Holly ([harg2\@cam.ac.uk](harg2@cam.ac.uk)), along with your Google Scholar, Orcid and GitHub accounts, so that your profile can be added to the webpage.
 
-In addition to group member profiles, we use the website to share resources (under the Resources tab). Each lab member can host their own webpage here, to share git repositories, shiny apps, packages and analyses. You might find it helpful to publish your rendered RMarkdowns here, as an electronic record of your research (see [here](https://www.huber.embl.de/users/giles/)) or you may want to share shiny apps here for collaborators to access (see [here](https://researchmind.co.uk)), it is up to you. Contact Holly to request an account on Hostinger, then go ahead and add your own webpage to the site.
+#In addition to group member profiles, we use the website to share resources (under the Resources tab). Each lab member can host their own webpage here, to share git repositories, shiny apps, packages and analyses. You might find it helpful to publish your rendered RMarkdowns here, as an electronic record of your research (see [here](https://www.huber.embl.de/users/giles/)) or you may want to share shiny apps here for collaborators to access (see [here](https://researchmind.co.uk)), it is up to you. Contact Holly to request an account on Hostinger, then go ahead and add your own webpage to the site.
+
+```
 
 ## Access servers and data storage
 
@@ -97,7 +100,7 @@ Then set your new password.
 
 **Server maintenance:**
 
-Gehad Youssef (gy260\@cam.ac.uk) maintains `mti-ai-srv-01` and Holly Giles ([harg2\@cam.ac.uk](mailto:sr952@cam.ac.uk){.email}) currently maintains `mti-ai-srv-02`. Contact them if you need help. If you are taking over as a server maintainer, see also the Server Maintenance document online.
+Gehad Youssef ([gy260\@cam.ac.uk](gy260@cam.ac.uk)) maintains `mti-ai-srv-01` and Fatima Baldo ([fmhb2\@cam.ac.uk](mailto:fmhb2@cam.ac.uk){.email}) currently maintains `mti-ai-srv-02`. Contact them if you need help. If you are taking over as a server maintainer, see also the Server Maintenance document (contact Holly).
 
 ## Server etiquette and house rules
 
