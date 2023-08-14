@@ -31,32 +31,43 @@ Here are some basic instructions and advice for maintaining the servers:
 
     2.  Make user the owner of data folder `sudo chown USERID`
 
+# Check memory usage 
+You can check the capacity left in /home and /data by running `df -h`   
+/dev/sdb2 corresponds to  /home    
+/deve/sda1 corresponds to /data
+
+
+You can check how much individual users are taking up in either with 
+
+`sudo du -hs /home/* ` and `sudo du -hs /data/*`
+
+Make sure no one is using more than 50Gb in home
+
 # Restarting the server
+The server is scheduled to be rebooted on: 
 
-If there is a lot of background activity on the server, you may need to restart it. Give people notice and time to finish up their jobs, and then run:
+Wed 5th July 2023 - Midnight    
+Sunday 15th January 2024 - Midnight    
+Wednesday 10th July 2024 - Midnight    
 
-# Killing jobs
+You will need to schedule more, every 6 months and give eveyrone 24 hour notice. 
 
-If a job is taking up too many resources, or too much time, you can kill it as follows:
+# Checking processing and Killing jobs
 
-# Updating R and R studio
+Check what jobs are taking up the most resources with: `top` 
 
-Every six months, R Studio needs to be updated. You can do this as follows:
+If a job is taking up too many resources, or too much time, you can kill it as follows: `kill` followed by the PID 
+
 
 # Installing new software
 
-`pip install` `conda install`\<- explain
+You can install new software with `pip install` and `conda install`. If you want to installation to be system wide, and not just for yourself, you can `sudo` first. 
 
-# Updating software
 
-# Keeping security up to date
+# Updating software and keeping security up to date
+Once a year you shoudl go to Ivan in IT and get him to  run `sudo apd update` to update software and keep security up to date
 
-Run `sudo apd update` whenever you install new software, to keep security up to date
-
-# Giving sudo access to other users
-
-All postdocs should have sudo rights on the mti-01 server. To add new postdocs to the list of users with sudo rights you can:
 
 # Setting up jupiter notebooks for users
 
-You can use jupiter notebooks similarly to RStudio as follows:
+You can find a tutorial for setting up a Jupyter notebook [here](https://www.dropbox.com/s/nh21x2f2bzcw9ya/Jupyter%20Notebook%20on%20the%20server-20230119_120326-Meeting%20Recording.mp4?dl=0). 
