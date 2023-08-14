@@ -1,0 +1,181 @@
+---
+title: "Seurat_Mapping_Queries_onto_references"
+author: "Holly A. R. Giles"
+date: "`r doc_date()`"
+output:
+  BiocStyle::html_document:
+      toc: yes
+      toc_depth: 3
+      toc_float: yes
+      code_folding: "hide" 
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(
+  tidy = TRUE,
+  tidy.opts = list(width.cutoff = 95),
+  fig.width = 10)
+ 
+set.seed(1996)
+
+```
+
+```{r loadLibraries, include=FALSE}
+
+
+library(patchwork)
+library(ggplot2)
+library(multtest)
+library(cowplot)
+library(tidyverse)
+library(scDblFinder) 
+library(Seurat)
+library(ggplot2)
+library(speckle)
+
+
+
+```
+
+
+```{r defineAesthetics, include=FALSE, warning = FALSE }
+
+source("../../R/themes_colors.R")
+
+
+```
+
+# Introduction to single-cell reference mapping
+
+# Reference pre-processing
+
+## Load data
+Load a pre-integrated reference
+
+```{r}
+load(file = "/data/harg2/analysis/squamousRData/controlworkspace.RData")
+
+```
+
+## Annotate cell types
+
+```{r assignCellIdentity, eval = TRUE}
+						 
+anno.combined <- RenameIdents(libsCombined, 
+                                      "0" = "", 
+                                      "1" = "", 
+                                      "2" = "",
+                                      "3" = "",
+                                      "4" = "",
+                                      "5" = "", 
+                                      "6" = "" , 
+                                      "7" = " ", 
+                                      "8" = " ",
+                                      "9" = "",
+                                      "10" = "",
+                                      "11" = "") 
+
+
+```
+
+## Visualise UMAP
+
+```{r cellType_annotated_UMAP, fig.path=plotDir, dev=c("png", "cairo_pdf"), eval = TRUE,  fig.height=5, fig.width=12}
+
+namedclusterColors <-  
+  list("" = "#FF0000", 
+       "" = "#FFA500", 
+       "" = "#00FF00",
+       "" = "#008000", 
+       "" = "#00FFFF", 
+       "" = "#0000FF",
+       " " = "#000080",
+       "" = "#FF00FF", 
+       "" = "#800080", 
+       "" = "#FFC0CB" 
+  
+)
+
+
+DefaultAssay(anno.combined) <- "integrated"
+
+DimPlot(anno.combined, cols = namedclusterColors  ) 
+
+
+```
+
+# Cell type classification using an integrated reference
+
+Seurat allows the projection of reference data (i.e. control-only) onto
+a query object (i.e. treated). There are two important distinctions
+between data transfer and data integration:
+
+1.  In data transfer, Seurat does not correct or modify the query
+    expression data.
+2.  In data transfer, Seurat has an option (set by default) to project
+    the PCA structure of a reference onto the query, instead of learning
+    a joint structure with CCA. We generally suggest using this option
+    when projecting data between scRNA-seq datasets.
+
+Data transfer involves the following steps:
+
+1\. Preprocessing the query data (in this case the 6 treated libraries)
+
+-   For a list of Seurat objects
+
+    -   Normalise each object, using the smae method as you did for the
+        reference
+
+    -   Find anchors for the transfer, in this case I use PCA but you
+        can also use supervised PCA if you are using multimodal data
+        like CITEseq
+
+    -   Transfer cell type labels from the reference to the query.
+
+    -   Add predictions of cell types (from the original annotation of
+        the treatment data) as meta data to be able to test the accuracy
+        of data transfer
+
+2\. Merging the query and reference data
+
+-   Project the query data onto the UMAP reference structure
+
+-   Visualise the results for each individual library, and for all
+    treated libraries together
+
+-   Check the quality of the predictions
+
+-   Generate a new UMAP, based on all the data, in case there are cell
+    types that only exist in treated data
+
+
+# Preprocessing the treated libraries 
+
+## Normalise data
+
+## Find transfer anchors for the transfer
+
+## Transfer cell type labels from the reference to  query
+
+## Add predictions of cell types 
+
+# Merge query and reference data
+
+##   Project the query data onto the UMAP reference structure
+
+##   Visualise new UMAPs
+
+### Individual
+
+### All 
+
+## Check the quality of the predictions
+
+##  Generate a new UMAP for query and reference 
+
+ 
+
