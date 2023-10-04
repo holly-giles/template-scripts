@@ -12,27 +12,30 @@ output:
 
 ------------------------------------------------------------------------
 
-This vignette explains the steps to go through from raw fastq files downloaded from the core facility, through to analysis of CRISPR screening data. It also demonstrates different packages for downstream analysis. 
+This vignette explains the steps to go through from raw fastq files downloaded from the core facility, through to analysis of CRISPR screening data. It also demonstrates different packages for downstream analysis.
 
-# Initial QC check
+If you have not run on a server before
 
-1.  Check all data files are present
+1.  Download anaconda
+    1.  Here is a good tutorial: <https://linuxhint.com/conda-command-not-found/>
+2.  Set up the following conda environment:
 
-    What to expect
+<!-- -->
 
-2.  (usually the core fac will have run bcl2fastq, which means you dont need to run mkfastq with cellRanger)
+    conda create -n [a-env-name you want e.g. mageck-vispr]  python=3.7
+    conda activate mageck-vispr
+    conda install -c conda-forge mamba
+    conda install -c bioconda -c conda-forge mageck
+    mamba install -c bioconda -c conda-forge mageck-vispr
 
-3.  Run an mds5sums check
+You should then have the mageck-vispr environment ready to run, later on you can just call mageck-vispr.
 
-    Here's how:
+To run the pipeline:
 
-4.  Take a look at the QC file
+1.  Get all the data in place to run pipeline
+    1.  Put fastqs into a directory, direct from the FTP download
 
-    How to interpret:
+    2.  Get a library file. When starting from fastq files, MAGeCK needs to know the sgRNA sequence and its targeting gene. Such information is provided in the sgRNA library file, and can be specified by the *-l/\--list-seq* option in **run** or **count** subcommand. e.g. from here: <https://github.com/dbarrell/pipeline_external/blob/main/libraries/yusa1_singleGene.csv> or here: <https://sourceforge.net/p/mageck/wiki/libraries/>
+2.  Activate the snakemake pipeline
 
-# Running alignments
-
-1. 
-
-# Running ... package to find targets
-
+To interpret the output

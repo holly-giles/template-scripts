@@ -1,0 +1,648 @@
+---
+title: "Seurat_Project_treatment_onto_control"
+author: "Holly A. R. Giles"
+date: "`r doc_date()`"
+output:
+  BiocStyle::html_document:
+      toc: yes
+      toc_depth: 3
+      toc_float: yes
+      code_folding: "hide" 
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(
+  tidy = TRUE,
+  tidy.opts = list(width.cutoff = 95),
+  fig.width = 10)
+  
+
+set.seed(1996)
+
+```
+
+```{r loadLibraries, include=FALSE}
+
+
+library(patchwork)
+library(ggplot2)
+library(multtest)
+library(cowplot)
+library(tidyverse)
+library(scDblFinder) 
+library(Seurat)
+library(ggplot2)
+library(speckle)
+
+
+
+```
+
+```{r plotDir, include=FALSE}
+
+plotDir = ifelse(exists(".standalone"), "", "../../inst/fig/projection/") 
+if(plotDir!="") if(!file.exists(plotDir)) dir.create(plotDir)
+
+```
+
+```{r defineAesthetics, include=FALSE, warning = FALSE }
+
+source("../../R/themes_colors.R")
+
+#sample colours 
+#Wes Anderson
+
+
+#Cluster Colours
+clusterColors <- list("0" = "#FF0000", #(Red)
+"1" = "#FFA500", #(Orange)
+"2" = "#FFFF00", #(Yellow)
+"3" = "#00FF00", #(Lime Green)
+"4" = "#008000", #(Dark Green)
+"5" = "#00FFFF", #(Cyan)
+"6" = "#008080", #(Teal)
+"7" = "#0000FF", #(Blue)
+"8" = "#000080",# (Navy Blue)
+"9" = "#FF00FF",# (Magenta)
+"10" = "#800080",# (Purple)
+"11" = "#FFC0CB",# (Pink)
+"12" = "#bf2837", #(Maroon)
+"13" = "#808080", #(Gray)
+"14" = "#000000" #(Black)
+  
+)
+
+```
+
+# Introduction to single-cell reference mapping
+
+In this vignette, I first load an integrated reference (based on three
+control-treated samples) and then leverage this reference to annotate
+the six treated libraries. The reference is used to analyse the treated
+data via cell type label transfer and projecting query cells onto the
+control reference UMAP. Notably, this does not require correction of the
+underlying raw query data (treated samples) and can therefore be an
+efficient strategy if a high quality reference is available.
+
+# Reference pre-processing
+
+## Load data
+
+I have already ran the Seurat processing and integration pipeline for
+control only samples to generate a reference. I load it here.
+
+```{r}
+load(file = "../../data/controlworkspace.RData")
+
+```
+
+## Annotate cell types
+
+The control data is all pre-processed, but the cell annotations are
+missing so I add them here.
+
+```{r assignCellIdentity, eval = TRUE}
+						 
+control.anno.combined <- RenameIdents(controllibsCombined, 
+                                      "0" = "Ciliated", 
+                                      "1" = "Club", 
+                                      "2" = "Ciliated",
+                                      "3" = "Basal",
+                                      "4" = "Suprabasal",
+                                      "5" = "Unknown 1", 
+                                      "6" = "Ciliated" , 
+                                      "7" = "Proliferating + Ciliated", 
+                                      "8" = "Proliferating Basal",
+                                      "9" = "Ionocyte",
+                                      "10" = "Goblet",
+                                      "11" = "Unknown 2") 
+
+
+```
+
+## Visualise UMAP
+
+```{r cellType_annotated_UMAP, fig.path=plotDir, dev=c("png", "cairo_pdf"), eval = TRUE,  fig.height=5, fig.width=12}
+
+namedclusterColors <-  
+  list("Ciliated" = "#FF0000", 
+       "Club" = "#FFA500", 
+       "Basal" = "#00FF00",
+       "Suprabasal" = "#008000", 
+       "Unknown 1" = "#00FFFF", 
+       "Proliferating + Ciliated" = "#0000FF",
+       "Proliferating Basal" = "#000080",
+       "Ionocyte" = "#FF00FF", 
+       "Goblet" = "#800080", 
+       "Unknown 2" = "#FFC0CB" 
+  
+)
+
+
+DefaultAssay(control.anno.combined) <- "integrated"
+
+DimPlot(control.anno.combined, cols = namedclusterColors  ) 
+
+
+```
+
+## Optional: Compute a cached neighbor index
+
+Compute the first 50 neighbors in the PCA / sPCA space of the reference.
+We store this information in the spca.annoy.neighbors object within the
+reference Seurat object and also cache the annoy index data structure
+(via cache.index = TRUE). You can use this when transferring anchors to
+save time.
+
+```{r eval= FALSE }
+
+bm <- FindNeighbors(
+  object = bm,
+  reduction = "spca",
+  dims = 1:50,
+  graph.name = "spca.annoy.neighbors", 
+  k.param = 50,
+  cache.index = TRUE,
+  return.neighbor = TRUE,
+  l2.norm = TRUE
+)
+
+```
+
+# Cell type classification using an integrated reference
+
+Seurat allows the projection of reference data (i.e. control-only) onto
+a query object (i.e. treated). There are two important distinctions
+between data transfer and data integration:
+
+1.  In data transfer, Seurat does not correct or modify the query
+    expression data.
+2.  In data transfer, Seurat has an option (set by default) to project
+    the PCA structure of a reference onto the query, instead of learning
+    a joint structure with CCA. We generally suggest using this option
+    when projecting data between scRNA-seq datasets.
+
+Data transfer involves the following steps:
+
+1\. Preprocessing the query data (in this case the 6 treated libraries)
+
+-   For a list of Seurat objects
+
+    -   Normalise each object, using the same method as you did for the
+        reference
+
+    -   Find anchors for the transfer, in this case I use PCA but you
+        can also use supervised PCA if you are using multimodal data
+        like CITEseq
+
+    -   Transfer cell type labels from the reference to the query.
+
+    -   Optional: Add predictions of cell types (from the original
+        annotation of the treatment data) as meta data to be able to
+        test the accuracy of data transfer
+
+2\. Merging the query and reference data
+
+-   Project the query data onto the UMAP reference structure
+
+-   Visualise the results for each individual library, and for all
+    treated libraries together
+
+-   Check the quality of the predictions
+
+-   Optional: Generate a new UMAP, based on all the data, in case there
+    are cell types that only exist in treated data
+
+# Preprocessing the treated libraries
+
+## Load data
+
+```{r loadData}
+
+#Load meta data 
+metafile<- read.csv("../../data/metaData.csv")
+
+metafile[c("Number", "disease", "D", "Treatment")] <- str_split_fixed(metafile$Sample.name, ' ', 4)
+
+metafile <- filter(metafile, Barcode %in% c("SITTA2", "SITTB2","SITTD2", "SITTE2","SITTG2","SITTH2"))
+
+# List names of all  libraries 
+libs = c("SITTA2",
+         "SITTB2",
+         "SITTD2", 
+         "SITTE2",
+         "SITTG2",
+         "SITTH2") 
+
+
+#loop through each of the folder names and load in the data 
+lib_list <- 
+  
+  lapply(libs, function(x){
+  
+    
+  #get file path
+  filename <-  paste0("/data/harg2/unprocessedData/squamous/10X_backup/", x , "/outs/filtered_feature_bc_matrix/")
+  
+  #read in 10x data
+  data10x <- Read10X(data.dir = filename)
+  
+  #create a Seurat Object 
+ obj <- 
+  CreateSeuratObject(counts = data10x, project = x, min.cells = 3, min.features = 100)
+ 
+#make into a data frame of two columns
+cell_sampleIDs <- as.data.frame(obj$orig.ident)
+colnames(cell_sampleIDs) <- "Barcode"
+cellIDs <- row.names(cell_sampleIDs)
+
+#Add meta data to cell IDs 
+metaData <- left_join(cell_sampleIDs, 
+                      #add the data for this specific sampleID
+                      filter(metafile, Barcode ==x), by = "Barcode") 
+
+row.names(metaData) <- cellIDs
+
+#add three meta data columns as three separate slots to each Seurat object 
+metaData$disease <- as.factor(metaData$disease)
+obj$tissueType <- metaData[6]
+
+
+metaData$Sample.name <- as.factor(metaData$Sample.name)
+obj$sampleType <- metaData[4]
+
+metaData$Treatment <- as.factor(metaData$Treatment)
+obj$treatment <- metaData[8]
+
+ obj
+  
+})
+
+names(lib_list) <- libs
+
+#list of seurat objects 
+lib_list
+
+
+```
+
+## QC on treated libraries
+
+### Add info on mitochondrial reads
+
+```{r mitochondrialReads, fig.height=7, fig.width=13}
+# The [[ operator can add columns to object metadata. This is a great place to stash QC stats
+
+#Use the set of all genes starting with `MT-` as a set of mitochondrial genes
+
+lib_list <- lapply(lib_list, function(seuset) {
+  seuset[["percent.mt"]] <- PercentageFeatureSet(seuset, pattern = "^MT-")
+  seuset
+})
+
+#confrin that this operation has correctly added % mt
+lib_list[[1]][["percent.mt"]]
+```
+
+### Filter cells based on QC metrics
+
+Filter cells that have - unique feature counts greater than 1000 - more
+than 100000 UMIs - more than 17% mitochondrial counts
+
+```{r filterCels, fig.height=7, fig.width=13}
+
+#Visualise QC metrics as a violin plot
+lapply(lib_list, function(x){
+  
+  VlnPlot(x, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+  
+})
+
+
+#filter based on QC metrics
+lib_list_filtered <- 
+  lapply(lib_list, function(x){
+    
+    subset(x, subset = nFeature_RNA > 1000  & nCount_RNA < 100000 & percent.mt < 17)
+ 
+  
+})
+
+
+names(lib_list_filtered) <- libs
+
+```
+
+### Filter doublets
+
+4 - 12% of cells are filtered out
+
+```{r findDoublets}
+
+lib_list_filtered <- 
+  lapply(lib_list_filtered, function(x){
+    
+    #Find doubles 
+    doublets <- scDblFinder(sce=x@assays$RNA@counts)
+    
+    #Add doublet scores to current seurat object x
+    x$doublet_score <- doublets$scDblFinder.score
+    
+    #add classification (singlet / doublet) to current Seurat object x
+    x$doublet <- doublets$scDblFinder.class
+    
+    #get doublet information as a table
+    meta_doublet=doublets@colData
+    
+    #subset Seurat object to only include singlets 
+    subset(x, cells = which(x@meta.data$doublet =='singlet'))
+   
+})
+
+
+```
+
+## Normalise data
+
+```{r normaliseTreated}
+
+lib_list_filtered <- lapply(X = lib_list_filtered, FUN = function(x) {
+  
+  x <- NormalizeData(x)
+  x <- FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000)
+
+  })
+
+
+```
+
+## Find transfer anchors for the transfer
+
+We find anchors between each treated library and the control reference.
+This command is optimised to minimize mapping time, by passing in a
+pre-computed set of reference neighbors, and turning off anchor
+filtration.
+
+NB Optional: Because I am mapping to the same reference multiple times,
+you can cache the part that involves just the reference, rather than
+compute this every time. To do this, n the pre-processing of the control
+reference, we would need to compute the first 50 neighbors in the PCA
+space of the reference. This information is stored in the
+spca.annoy.neighbors object within the reference Seurat object. You can
+also cache the annoy index data structure (via cache.index = TRUE).
+
+```{r findTransferAnchors}
+
+
+anchors <- list()
+for (i in 1:length(lib_list_filtered)) {
+  anchors[[i]] <- FindTransferAnchors(
+    reference = control.anno.combined,
+    query = lib_list_filtered[[i]],
+    reference.reduction = "pca", 
+    #reference.neighbors = "spca.annoy.neighbors", #use this if caculated
+    dims = 1:20
+  )
+}
+
+
+
+
+```
+
+## Transfer cell type labels from the reference to query
+
+After finding anchors, we use the TransferData() function to classify
+the query cells based on reference data (a vector of reference cell type
+labels). TransferData() returns a matrix with predicted IDs and
+prediction scores, which we can add to the query metadata.
+
+```{R mapData}
+
+# add reference cell labels as a meta data slot 
+control.anno.combined$id <- Idents(control.anno.combined)
+
+predictions <- list() 
+for (i in 1:length(lib_list_filtered)) {
+  predictions[[i]] <- TransferData(anchorset = anchors[[i]],
+                                   refdata = control.anno.combined$id,
+                              dims = 1:20)
+  
+  lib_list_filtered[[i]] <- AddMetaData(lib_list_filtered[[i]], metadata = predictions[[i]])
+  
+}
+
+
+
+```
+
+# Merge query and reference data
+
+## Extract the UMAP model of the reference
+
+```{r UMAPextraction}
+
+control.integrated <- RunUMAP(control.anno.combined, reduction = "pca", dims = 1:20, return.model = TRUE)
+
+
+```
+
+## Project the query data onto the UMAP reference structure
+
+We then individually map each of the datasets. We transfer cell type
+labels and protein data from the reference to the query and project the
+query data onto the UMAP structure of the reference.
+
+```{r mapQuery}
+
+for (i in 1:length(lib_list_filtered)) {
+  lib_list_filtered[[i]] <- MapQuery(
+    anchorset = anchors[[i]], 
+    query = lib_list_filtered[[i]],
+    reference = control.integrated, 
+    refdata = list(celltype = "id"), 
+    reference.reduction = "pca", 
+    reduction.model = "umap")
+    
+}
+
+
+
+
+```
+
+## Visualise new UMAPs
+
+Now that mapping is complete, we can visualise the resulting UMAP for
+each treated library.
+
+### Individual
+
+```{r  UMAP_projected_onto_control, fig.path=plotDir, dev=c("png", "cairo_pdf"), fig.height=5, fig.width=5}
+
+control  <- DimPlot(control.integrated, reduction = 'umap', group.by = 'id', label.size = 3, cols = namedclusterColors) + ggtitle("Reference UMAP (Control samples only)")
+
+p1 <- DimPlot(lib_list_filtered[[1]], reduction = 'ref.umap', group.by = 'predicted.id', label.size = 3, cols = namedclusterColors) + ggtitle(paste(lib_list_filtered[[1]]$sampleType[[1]], "projected onto control-only UMAP", sep = " "))
+
+p2 <- DimPlot(lib_list_filtered[[2]], reduction = 'ref.umap', group.by = 'predicted.id', label.size = 3, cols = namedclusterColors) + ggtitle(paste(lib_list_filtered[[2]]$sampleType[[2]], "projected onto control-only UMAP", sep = " "))
+
+p3 <- DimPlot(lib_list_filtered[[3]], reduction = 'ref.umap', group.by = 'predicted.id', label.size = 3, cols = namedclusterColors) + ggtitle(paste(lib_list_filtered[[3]]$sampleType[[3]], "projected onto control-only UMAP", sep = " "))
+
+p4 <- DimPlot(lib_list_filtered[[4]], reduction = 'ref.umap', group.by = 'predicted.id', label.size = 3, cols = namedclusterColors) + ggtitle(paste(lib_list_filtered[[4]]$sampleType[[4]], "projected onto control-only UMAP", sep = " "))
+
+p5 <- DimPlot(lib_list_filtered[[5]], reduction = 'ref.umap', group.by = 'predicted.id', label.size = 3, cols = namedclusterColors) + ggtitle(paste(lib_list_filtered[[5]]$sampleType[[5]], "projected onto control-only UMAP", sep = " "))
+
+p6 <- DimPlot(lib_list_filtered[[6]], reduction = 'ref.umap', group.by = 'predicted.id', label.size = 3, cols = namedclusterColors) + ggtitle(paste(lib_list_filtered[[6]]$sampleType[[6]], "projected onto control-only UMAP", sep = " "))
+
+
+
+control
+p1
+p2
+p3
+p4
+p5
+p6
+
+```
+
+### All treated
+
+We can also merge all the objects into one dataset. Note that they have
+all been integrated into a common space, defined by the reference. We
+can then visualise the results together.
+
+```{r UMAP_projected_onto_control_all_treated, fig.path=plotDir, dev=c("png", "cairo_pdf"), fig.height=5, fig.width=5}
+
+# Merge the batches 
+libs_treated <- merge(lib_list_filtered[[1]], lib_list_filtered[2:length(lib_list_filtered)], merge.dr = "ref.umap")
+
+DimPlot(libs_treated, reduction = "ref.umap", group.by =  "predicted.id", label = TRUE, repel = TRUE, label.size = 3,cols = namedclusterColors) + NoLegend() + ggtitle("All treated libraries, projected onto control UMAP")
+
+```
+
+## Check the quality of the predictions
+
+### Look at cell markers
+
+To verify the predictions, we can examine some canonical cell type
+markers for specific lung epithelial cell populations.
+
+Most of the cells are well-classified and the marker expression aligns
+well with cell annotation. In some cases, cell types express high levels
+of a marker that of a different cell type, so its possible that there
+are some cells being wrongly annotated.
+
+Basal markers: Mostly basal, although ciliated and club also show some
+expression.
+
+```{r}
+
+DefaultAssay(libs_treated) <- "RNA"
+
+list_of_celltypes <- c("Basal", "proliferatingBasal", "BC_Club", "Club", "Ciliated", "Neuroendocine", "Tuft", "Ionocyte", "Goblet")
+
+
+list_of_cellmarkers <- list(Basal = c("KRT5","KRT14","TP63","DAPL1", "NGFR"),
+                          proliferatingBasal = c("MKI67","TOP2A","CDK1"),
+                          BC_Club = c("KRT4","KRT13"),
+                          Club = c("SCGB1A1","KRT15","LYPD2"),
+                          Ciliated =c("FOXJ1","CCDC153","CCDC113","MLF1","LZTFL1"),
+                          Neuroendocine = c("CHGA","ASCL1","SOX9","ITGA2","ITGB4"), 
+                          Tuft = c("PUO2F3","AVIL","GNAT3","TRPM5"),
+                          Ionocyte = c("FOXI1", "CFTR", "ASCL3"),
+                          Goblet = c("MUC5AC", "MUC5B", "GP2", "SPDEF"))
+
+
+cellViolins <- 
+lapply(list_of_celltypes, function(j){
+    
+    #get a list of genes
+    featurestoplot <- list_of_cellmarkers[[j]]
+  
+    #get a list of violin plots, 8 for each cluster
+    violinList <- VlnPlot(libs_treated, features = featurestoplot, group.by = "predicted.id")
+
+  
+  
+    #add cluster number as title 
+    violinList + plot_annotation(title = paste("Cell Type", j, sep = " "))  
+
+  
+})
+
+cellViolins
+
+```
+
+### Optional: Compare with a ground truth (if available)
+
+In some cases you may have a "ground truth" set of annotations for the
+query data set. For example, for these treated samples I also have the
+label annotations from the full integrated analysis of all 9 samples.
+You can optionally use these to evaluate how well the predicted cell
+type annotations for the treated samples match the original annotations.
+
+```{r eval = FALSE}
+# add cell type to meta data, using annotations from integrated object 
+
+#annotate where the predicted id and the original annotation match 
+for (i in 1:length(lib_list_filtered)) { 
+lib_list_filtered[[i]]$prediction.match <- lib_list_filtered[[i]]$predicted.id == lib_list_filtered[[i]]$celltype
+}
+
+#look at the level of matchin 
+table(lib_list_filtered[[1]]$prediction.match)
+table(lib_list_filtered[[2]]$prediction.match)
+table(lib_list_filtered[[3]]$prediction.match)
+table(lib_list_filtered[[4]]$prediction.match)
+table(lib_list_filtered[[5]]$prediction.match)
+table(lib_list_filtered[[6]]$prediction.match)
+
+```
+
+## Optional: Generate a new UMAP for query and reference
+
+We know that the treated samples contain cell types that are not present
+in the (control-only) reference, therefore computing a 'de novo'
+visualisation of the UMAP is an important step in interpreting the
+dataset.
+
+```{r eval = FALSE}
+
+#annotate the original source of the date 
+control.integrated$source <- 'reference'
+lib_list_filtered[[1]]$source <- 'query'
+lib_list_filtered[[2]]$source <- 'query'
+lib_list_filtered[[3]]$source <- 'query'
+lib_list_filtered[[4]]$source <- 'query'
+lib_list_filtered[[5]]$source <- 'query'
+lib_list_filtered[[6]]$source <- 'query'
+
+
+#merge reference and query
+refquery <- merge(control.integrated, lib_list_filtered[1:length(lib_list_filtered)], merge.dr = "ref.umap")
+
+#NB I cant get the pcas to merge 
+refquery[["pca"]] <- merge(control.integrated[["pca"]], lib_list_filtered[1:length(lib_list_filtered)][["ref.pca"]])
+
+#rerun UMAP
+refquery <- RunUMAP(refquery, reduction = 'pca', dims = 1:20)
+
+#remake UMAP plot 
+DimPlot(refquery, group.by = 'source', shuffle = TRUE)
+
+BiocManager::install("BiocStyle")
+
+```
+
+```{r}
+
+save.image(file = "../../data/projectionWorkspace.RData")
+#load(file = "../../data/projectionWorkspace.RData")
+
+```
