@@ -1,0 +1,189 @@
+---
+title: "TP53 Differential expression analysis"
+output: html_document
+date: "2024-02-14"
+---
+
+```{r setup, include=FALSE}
+
+library(DESeq2)
+library(BloodCancerMultiOmics2017)
+library(genefilter)
+library(dplyr)
+library(tibble)
+library(pheatmap)
+library(RColorBrewer)
+library("vsn")
+library(BiocGenerics)
+
+```
+
+## Load data 
+
+### From a counts matrix 
+```{r, eval = FALSE}
+
+
+dds <- DESeqDataSetFromMatrix(countData = cts,
+                              colData = coldata,
+                              design= ~ batch + condition)
+
+```
+
+### From pre-made data objects 
+
+```{r }
+data(list=c("dds", "patmeta", "mutCOM"))
+```
+
+## Check out data objects 
+```{r}
+dds
+head(counts(dds))
+rowData(dds)
+colData(dds)
+
+patmeta
+
+factor(assayData(mutCOM[dds$PatID,])$binary[,"TP53"])
+
+```
+
+## Select CLL samples with TP53 annotation 
+```{r}
+
+#only choose CLL samples
+colData(dds)$Diagnosis <- patmeta[match(dds$PatID,rownames(patmeta)),]$Diagnosis
+ddsCLL <- dds[,dds$Diagnosis %in% "CLL"]
+
+#add TP53 information
+colData(ddsCLL)$TP53 <-
+  factor(assayData(mutCOM[ddsCLL$PatID,])$binary[,"TP53"])
+
+
+# also add other key genetic info
+colData(ddsCLL)$trisomy12 <-
+  factor(assayData(mutCOM[ddsCLL$PatID,])$binary[,"trisomy12"])
+colData(ddsCLL)$IGHV <- factor(patmeta[ddsCLL$PatID,]$IGHV)
+colData(ddsCLL)$Gender <- factor(patmeta[ddsCLL$PatID,]$Gender)
+
+#remove samples that do not have TP53 information
+ddsCLL <- ddsCLL[,!is.na(ddsCLL$TP53)]
+
+#how many genes and samples we have?
+dim(ddsCLL)
+
+```
+
+## Preprocess the count matrix before differential expression analysis
+Remove transcripts that do not have gene symbol annotations, show low counts or do not show variance across samples.
+```{r}
+#remove genes without gene symbol annotations
+ddsCLL <- ddsCLL[!is.na(rowData(ddsCLL)$symbol),]
+ddsCLL <- ddsCLL[rowData(ddsCLL)$symbol != "",]
+
+#only keep genes that have counts higher than 10 in any sample
+keep <- apply(counts(ddsCLL), 1, function(x) any(x >= 10)) 
+ddsCLL <- ddsCLL[keep,]
+
+#Remove transcripts do not show variance across samples
+ddsCLL <- estimateSizeFactors(ddsCLL)
+sds <- rowSds(counts(ddsCLL, normalized = TRUE))
+sh <- shorth(sds)
+ddsCLL <- ddsCLL[sds >= sh,]
+
+#variance stabilization
+ddsCLL.norm <- varianceStabilizingTransformation(ddsCLL, blind=TRUE)
+
+meanSdPlot(assay(ddsCLL))
+meanSdPlot(assay(ddsCLL.norm))
+
+#how many genes left
+dim(ddsCLL)
+
+```
+## Quality control checks 
+```{r}
+#PCA 
+colData(ddsCLL.norm)
+plotPCA(ddsCLL.norm, intgroup=c("batch"))
+plotPCA(ddsCLL.norm, intgroup=c("Gender"))
+plotPCA(ddsCLL.norm, intgroup=c("IGHV"))
+
+plotPCA(ddsCLL.norm, intgroup=c("TP53"))
+
+```
+
+
+## Run Differential expression analysis 
+```{r}
+# set design formula
+design(ddsCLL) <- ~  TP53
+
+
+ddsCLL <- DESeq(ddsCLL, betaPrior = FALSE)
+
+```
+
+## View results 
+```{r}
+DEres <- results(ddsCLL)
+#DEres.shr <- lfcShrink(ddsCLL, type="normal", contrast = c("TP53","1","0"),
+#                       res = DEres)
+
+DEres
+
+summary(DEres)
+
+```
+# Exploring the results 
+
+## Plot heatmap 
+
+```{r}
+
+
+#filter genes
+fdrCut <- 0.1
+fcCut <- 1.5
+
+allDE <- data.frame(DEres) %>%
+  rownames_to_column(var = "ID") %>% 
+  mutate(Symbol = rowData(ddsCLL[ID,])$symbol,
+         Chr = rowData(ddsCLL[ID,])$chromosome) %>% 
+  filter(padj <= fdrCut & abs(log2FoldChange) > fcCut) %>% 
+  arrange(pvalue) %>% filter(!duplicated(Symbol))
+
+
+#get the expression matrix
+plotMat <- assay(ddsCLL.norm[allDE$ID,])
+colnames(plotMat) <- ddsCLL.norm$PatID
+rownames(plotMat) <- allDE$Symbol
+
+#sort columns of plot matrix based on TP53 status
+plotMat <- plotMat[,order(ddsCLL.norm$TP53)]
+
+#calculate z-score and scale
+plotMat <- t(scale(t(plotMat)))
+plotMat[plotMat >= 4] <- 4
+plotMat[plotMat <= -4] <- -4
+
+
+#Plot the heat map.
+
+#prepare colums and row annotations
+annoCol <- data.frame(row.names=ddsCLL.norm$PatID, TP53=ddsCLL.norm$TP53)
+levels(annoCol$TP53) <- list(wt = 0, mut =1)
+annoColor <- list(TP53 = c(wt = "grey80", mut = "black"))
+
+
+pheatmap(plotMat,
+         color=colorRampPalette(rev(brewer.pal(n=7, name="RdBu")))(100),
+         cluster_cols = FALSE,
+         annotation_col = annoCol,
+         show_colnames = FALSE, fontsize_row = 3,
+         breaks = seq(-4,4, length.out = 101),
+         annotation_colors = annoColor, border_color = NA)
+
+
+```
