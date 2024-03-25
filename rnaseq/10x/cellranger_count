@@ -2,3 +2,19 @@ cellranger count --id=NAME_OF_OUTPUT_FOLDER \
    --fastqs=PATH_TO_FASTQ_FILES \
    --sample=SUBSET_FASTQFILES_BY_SAMPLE_ID \
    --transcriptome=/PATH_TO_REFERENCE i.e. /home/harg2/references/10xrnaseq/refdata-gex-GRCh38-2020-A
+
+
+
+#For multiple samples 
+for library in SITTA2 SITTB2 SITTC2 SITTD2 SITTE2 SITTF2 SITTG2 SITTH1 SITTH2
+
+do
+
+    cellranger count --id=$library \ #call the folder the name above
+                        --transcriptome=/data/sqamous/ref/ADDREFFROM10XWEBSItE/ \ 
+                        --fastqs=/data/sqamous/10x \
+                        --sample=$library \ #which library to do #if files are in correct format, it should read from file name no need for subfolders
+                        --localcores=8 \ #try this so you dont use all space on server 
+                        --localmem=64
+
+done
