@@ -1,1 +1,7 @@
-
+#conda activate spipe-v1.0.0
+split-pipe \
+    --mode mkref \
+    --genome_name hg38 \
+    --output_dir /home/harg2/rds/hpc-work/rawData/jansenn/newvolume/genomes/hg38/output/ \
+    --genes /home/harg2/rds/hpc-work/rawData/jansenn/newvolume/genomes/hg38/Homo_sapiens.GRCh38.111.gtf \
+    --fasta /home/harg2/rds/hpc-work/rawData/jansenn/newvolume/genomes/hg38/Homo_sapiens.GRCh38.dna.primary_assembly.fa
