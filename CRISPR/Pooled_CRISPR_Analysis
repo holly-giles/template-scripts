@@ -1,0 +1,881 @@
+---
+title: "Pooled CRISPR analysis"
+author: "Holly A. R. Giles"
+output: html_document
+date: "`r doc_date()`"
+---
+
+
+This script contains code to run QC,  visualise results and determine hits from pooled CRISPR screens analysed with MAGeCK. It can be knitted to generate an interactive html file to share with collaborators. 
+
+```{r loadlibraries , include=FALSE}
+
+# Set seed to keep outputs consistent
+set.seed(1996)
+
+# Load software packages 
+library('org.Hs.eg.db')
+library(msigdbr)
+library(ggplot2)
+library(ggrepel)
+library(knitr)
+library(stringr)
+library(reshape2)
+library(patchwork)
+library(tidyverse)
+library(pheatmap)
+library(ggbeeswarm)
+library("clusterProfiler")
+library(EnhancedVolcano)
+
+
+```
+
+
+```{r defineAesthetics, include=FALSE, warning = FALSE }
+
+### ggplot themes
+
+fontsize=14
+
+## theme for ggplots
+t1<-theme(                              
+  plot.background = element_blank(), 
+  panel.grid.major = element_line(),
+  panel.grid.major.x = element_line(linetype = "dotted", colour = "grey"),
+  panel.grid.minor = element_blank(), 
+  panel.border = element_blank(), 
+  panel.background = element_blank(),
+  axis.line = element_line(size=.4),
+  axis.line.x = element_line(),
+  axis.line.y = element_line(),
+  axis.text.x  = element_text(angle=90, size=16, face="bold", hjust = 1, vjust = 0.4),
+  axis.text.y = element_text(size = 18),
+  axis.ticks.x = element_line(linetype = "dotted"),
+  axis.ticks.length = unit(0.3,"cm"),
+  axis.title.x = element_text(face="bold", size=18), 
+  axis.title.y = element_text(face="bold", size=18),
+  plot.title = element_text(face="bold", size=18, hjust = 0.5),
+  strip.text = element_text(size = fontsize)
+)
+
+t2<-t1+
+  theme( axis.text.x  = element_text(angle=0, size=16, face="bold", hjust = 0.5, vjust = 1))
+
+## theme for legends
+t.leg <-  theme(legend.title = element_text(face='bold', 
+                                            hjust = 1, size=11),
+                legend.key = element_blank(),
+                legend.text = element_text(size=12),
+                legend.background = element_rect(color = "black"))
+
+
+
+### Set colour palettes
+
+#For Categorical: 
+colors <- c("#A1BE1F", #green
+            "#F4C61F", #yellow
+            "#734595", #purple
+            "#D41645", #red
+            "#3B6FB6", #blue
+            "#B65417", #orange
+            "#E2E868", #light green
+            "#CBA3D8", #light purple
+            "#E58F9E", #light purple
+            "#8BB8E8", #light blue
+            "#F49E17", #light orange
+            "#303030", #black
+            "#A8A99E", #grey
+            "#007B53") #dark green
+
+#Red to blue Divergent pallette: 
+Divergent <- c("#003DA5", "#2055B0", "#406EBC", "#6086C7", "#809ED2", "#9FB6DD", "#BFCFE9", "#DFE7F4", "white", "white", "white","#F4E0E7", "#E9C2CF", "#DEA3B6", "#D3849E", "#C76586", "#BC476E", "#B12855", "#A6093D")
+
+#blue pallette for negatives : 
+palblues <- c("#003DA5", "#2055B0", "#406EBC", "#6086C7", "#809ED2", "#9FB6DD", "#BFCFE9", "#DFE7F4")
+
+#red pallette for positives :
+palreds <- c("#F4E0E7", "#E9C2CF", "#DEA3B6", "#D3849E", "#C76586", "#BC476E", "#B12855", "#A6093D")
+
+
+```
+
+```{r defineFunctions, include = FALSE}
+
+#These are all copied form Mageck report 
+
+genreporttable<-function(cpname,genetb){
+  comparisons=rep(cpname,2)
+  #genetb=read.table(genesummaryfile,header = T,as.is = T)
+  ngenes=rep(nrow(genetb),2)
+  direction=c('neg','pos')
+  fdr1=c(sum(genetb[,5]<0.01),sum(genetb[,11]<0.01))
+  fdr5=c(sum(genetb[,5]<0.05),sum(genetb[,11]<0.05))
+  fdr25=c(sum(genetb[,5]<0.05),sum(genetb[,11]<0.05))
+  xtb=data.frame(Comparison=comparisons,Genes=ngenes,Selection=direction,FDR1=fdr1,FDR5=fdr5,FDR25=fdr25);
+  colnames(xtb)=c("Comparison","Genes","Selection","FDR1%","FDR5%","FDR25%");
+  return (xtb);
+}
+
+
+colors=c( "#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",  "#A65628", "#F781BF",
+          "#999999", "#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494", "#B3B3B3", 
+          "#8DD3C7", "#FFFFB3", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#B3DE69", "#FCCDE5",
+          "#D9D9D9", "#BC80BD", "#CCEBC5", "#FFED6F")
+
+
+plotrankedvalues<-function(val, tglist, cutoffline=-1, ...){
+  
+  plot(val,log='y',ylim=c(max(val),min(val)),type='l',lwd=2, ...)
+  if(length(tglist)>0){
+    for(i in 1:length(tglist)){
+      targetgene=tglist[i];
+      tx=which(names(val)==targetgene);ty=val[targetgene];
+      points(tx,ty,col=colors[(i %% length(colors)) ],cex=2,pch=20)
+      # text(tx+50,ty,targetgene,col=colors[i])
+    }
+    legend('topright',tglist,pch=20,pt.cex = 2,cex=1,col=colors)
+  }
+  if(cutoffline>0){
+    lines(c(cutoffline,cutoffline),c(min(val)*1e-5,max(val)*10000),lty=2)
+  }
+}
+
+
+
+plotrandvalues<-function(val,targetgenelist,cutoffline=-1, ...){
+  # choose the one with the best distance distribution
+  
+  mindiffvalue=0;
+  randval=val;
+  for(i in 1:20){
+    randval0=sample(val)
+    vindex=sort(which(names(randval0) %in% targetgenelist))
+    if(max(vindex)>0.9*length(val)){
+      # print('pass...')
+      next;
+    }
+    mindiffind=min(diff(vindex));
+    if (mindiffind > mindiffvalue){
+      mindiffvalue=mindiffind;
+      randval=randval0;
+      # print(paste('Diff: ',mindiffvalue))
+    }
+  }
+  plot(randval,log='y',ylim=c(max(randval),min(randval)),pch=20,col='grey', ...)
+  
+  if(length(targetgenelist)>0){
+    for(i in 1:length(targetgenelist)){
+      targetgene=targetgenelist[i];
+      tx=which(names(randval)==targetgene);ty=randval[targetgene];
+      points(tx,ty,col=colors[(i %% length(colors)) ],cex=2,pch=20)
+      text(tx+length(randval)/100,ty,targetgene,col=colors[i],adj=1,pos=4)
+    }
+  }
+  if(cutoffline>0){
+    lines(c(-100,length(randval)*2),c(cutoffline,cutoffline),lty=2)
+  }
+  
+}
+
+getcomparisonsfromlogfile<-function(logfile){
+  
+  logline=readLines(file(logfile,"r"),n = 1)
+  #print(logline)
+  logbk=strsplit(logline,' ')[[1]]
+  ctrl_sample=c()
+  treat_sample=c()
+  for(i_x in 1:length(logbk)){
+    if(logbk[i_x]=='-c' | logbk[i_x]=='--control'){
+      ctrl_sample=strsplit(logbk[i_x+1],',')[[1]]
+    }
+     if(logbk[i_x]=='-t' | logbk[i_x]=='--treatment'){
+      treat_sample=strsplit(logbk[i_x+1],',')[[1]]
+    }
+  }
+  #close(logff)
+  return (list(ctrl_sample,treat_sample))
+}
+
+plotindvidualsgrnas<-function(sg_table,targetgene,collabel){
+  
+  xsg_c=sg_table[which(sg_table[,'Gene']==targetgene),c('control_count','treatment_count')]
+  rownames(xsg_c)=sg_table[which(sg_table[,'Gene']==targetgene),'sgrna']
+  
+  xsg_c2=paste(xsg_c[,1],xsg_c[,2],sep='/')
+  
+  xsg_c3=t(data.frame(lapply(strsplit(xsg_c2,'/'),as.numeric)))
+  rownames(xsg_c3)=rownames(xsg_c)
+  
+  targetmat=xsg_c3
+  
+  targetmatvec=unlist(targetmat)+1
+  yrange=range(targetmatvec[targetmatvec>0]);
+  # yrange[1]=1; # set the minimum value to 1
+  for(i in 1:nrow(targetmat)){
+    vali=targetmat[i,]+1;
+    if(i==1){
+      plot(1:length(vali),vali,type='b',las=1,pch=20,main=paste('sgRNAs in',targetgene),ylab='Read counts',xlab='Samples',xlim=c(0.7,length(vali)+0.3),ylim = yrange,col=colors[(i %% length(colors))],xaxt='n',log='y')
+      if(length(collabel)==length(vali)){
+         axis(1,at=1:length(vali),labels=(collabel),las=2)
+      }else{
+        warning('Cannot extract sample labels.')
+      }
+
+      # lines(0:100,rep(1,101),col='black');
+    }else{
+      lines(1:length(vali),vali,type='b',pch=20,col=colors[(i %% length(colors))])
+    } 
+  }
+  
+
+}
+
+
+
+plot_rra_or_p_scores<-function(gstable,startindex,fdrcolumn,target_list,...){
+  pvec=gstable[,startindex]
+  names(pvec)=gstable[,'id']
+  pvec=sort(pvec);
+  
+  ncutoff=ifelse(fdrcutoff>0,sum(gstable[,fdrcolumn]<fdrcutoff),-1)
+  
+  vcutoff=ifelse(fdrcutoff>0 & ncutoff>0,max(pvec[1:ncutoff]),-1)
+  
+  plotrankedvalues(pvec,target_list,cutoffline = ncutoff,...)
+  
+  plotrandvalues(pvec,target_list,cutoffline = vcutoff,...)
+
+}
+```
+
+# QC
+
+## PCA
+
+```{r PCA, out.width = "85%"}
+
+#load a pnd from VISPR, or generate your own on count data 
+knitr::include_graphics("../figs/PCA_KYSE140.png")
+
+```
+
+
+
+## Depletion of known essential genes compared to non-essential genes
+
+
+```{r}
+# Here I use the Hart common essential genes, to get a vector of genes: 
+hart_common_ess <- read.table("/data/human_essential_hart.txt", header = T)$Gene 
+
+# load counts matrix that is output by Mageck run
+sg_table=read.table("/MAGECK_outputs/results/count/all.count_normalized.txt",header = T,as.is = T,na.strings='')
+
+#select conditions of interest 
+sg_table <- select(sg_table, sgRNA, Gene, 
+                   "kyse140.day0", 
+                   "kyse140.dmso.t1", 
+                   "kyse140.dmso.t2",
+                   "kyse140.azd.t1",  
+                   "kyse140.azd.t2")
+
+#make plotting table 
+#add column to indicate if gene is essential 
+sg_table <- sg_table %>%
+  add_column(Essentiality = 
+               #if the gene is in the Hart essential gene list, mark as essential, otherwise as non-essential
+               if_else(.$Gene %in%  hart_common_ess, "Ess", "Non-Ess"))
+
+#make plotting table and rearrange columns 
+plotTable <- sg_table %>% pivot_longer(cols = 3:7, names_to = "Condition", values_to = "Counts")
+
+#order the conditions to the order i want them to be in the plot by setting Conidition as a factor and setting the factor levels 
+plotTable$Condition <- factor(plotTable$Condition, 
+                              levels = c("kyse140.day0", 
+                                         "kyse140.dmso.t1",  
+                                         "kyse140.dmso.t2", 
+                                         "kyse140.azd.t1", 
+                                         "kyse140.azd.t2"))
+
+```
+
+```{r relative_depletion_of_hart_comm_ess_genes_boxplot}
+
+#Make boxplot  
+  ggplot(plotTable, 
+         aes(x = Condition, y = Counts, fill = Essentiality)) + 
+  geom_boxplot(aes(fill = Essentiality)) +
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))  +
+  ggtitle("sgRNA normalised counts for Hart Common Ess. and Non-Ess. genes")
+
+#Its also good to check the log fold change
+
+#clear the environment
+rm(plotTable, sg_table)
+
+```
+
+
+
+## Positive control genes
+
+Pick some genes that you expect to be enriched depleted in treated samples versus control, to check guides behaved as expected
+
+```{r}
+
+# define positive controls here:
+pos_controls <- c("TSC1", "TSC2", "SOX2")
+
+# get counts matrix 
+sg_table=read.table("../MAGeCK_runs/RRA_method_all/results/count/all.count_normalized.txt",header = T,as.is = T,na.strings='')
+
+#select conditions of interest 
+sg_table <- select(sg_table, sgRNA, Gene, 
+                   "kyse140.day0", 
+                   "kyse140.dmso.t1", 
+                   "kyse140.dmso.t2", 
+                   "kyse140.azd.t1", 
+                   "kyse140.azd.t2" )
+
+
+#The following figure shows the distribution of sgRNA read counts (normalized) of selected postive control genes in selected samples.
+
+plotList <- 
+  
+  #lapply loops through each gene in the list pos_controls and applies the following function 
+lapply(pos_controls, function(target_gene){
+  
+  #get a plotting table for each gene (target_gene) with  a counts column and a condition column
+  plotTable <- 
+    dplyr::filter(sg_table,  Gene == target_gene) %>% 
+    pivot_longer(cols = 3:7, names_to = "Condition", values_to = "Counts")
+  
+  #set the factor levels of the Condition column, so that they are shown in plot in this order
+  plotTable$Condition <- 
+    factor(plotTable$Condition, 
+           levels = c("kyse140.day0", 
+                      "kyse140.dmso.t1", 
+                      "kyse140.dmso.t2", 
+                      "kyse140.azd.t1", 
+                      "kyse140.azd.t2"))
+  
+  ggplot(plotTable, 
+         aes(x = Condition, y = Counts, col = sgRNA)) + 
+    geom_point() +
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) + 
+    geom_line(aes(group = sgRNA)) + 
+    ggtitle(paste0("Normalised counts for \n positive control genes \n", target_gene))
+           
+  
+})
+
+plotList
+
+#clear the environment
+rm(plotTable, sg_table)
+
+```
+
+
+
+## Dummy guides
+Dummy guides should not be depleted / enriched in any particular condition as they are not targeted any gene and so do not generate a KO / confer no selective advantage or disadvantage. 
+
+```{r }
+
+# read in counts matrix from MAGECK
+sg_table = read.table("/results/count/all.count_normalized.txt",header = T,as.is = T,na.strings='')
+
+#select conditions of interest 
+sg_table <- select(sg_table,
+                   sgRNA, 
+                   Gene, 
+                   "kyse140.day0", 
+                   "kyse140.dmso.t1", 
+                   "kyse140.dmso.t2",
+                   "kyse140.azd.t1", 
+                   "kyse140.azd.t2" )
+
+```
+
+```{r dummy_guides_line_plots}
+
+#The following figure shows the distribution of sgRNA read counts (normalized) of dummy guides  in selected samples.
+
+#get a plotting table for each gene and get a counts column and a condition column
+  plotTable <- sg_table %>% 
+  dplyr::filter(Gene == "Control") %>% 
+  pivot_longer(cols = 3:7, names_to = "Condition", values_to = "Counts")
+  
+  plotTable$Condition <- factor(plotTable$Condition, 
+                                levels = c("kyse140.day0", 
+                                           "kyse140.dmso.t1", 
+                                           "kyse140.dmso.t2", 
+                                           "kyse140.azd.t1", 
+                                           "kyse140.azd.t2"))
+  
+  #Generate line plot for all dummy guides
+  ggplot(plotTable, aes(x = Condition, y = Counts)) + 
+    geom_point(color = "grey") +
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) + 
+    geom_line(aes(group = sgRNA), color = "grey") + 
+    guides(color = FALSE, size = FALSE) + 
+    ggtitle("Distributions of sgRNA normalised counts for dummy guides") 
+  
+  
+  
+```
+
+```{r dummy_guides_violin_plots, fig.path=plotDir, dev=c("png", "cairo_pdf")}
+  
+#Violin plots   
+  ggplot(plotTable, aes(x = Condition, y = Counts)) +
+  geom_violin() +
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))  + 
+  ggtitle("Distributions of sgRNA normalised counts for dummy guides") 
+
+#clear the environment
+rm(plotTable, sg_table)
+
+```
+
+
+## Correlations
+
+### Between Guides
+
+```{r guide_correlations}
+
+#add your own code for checking correlations between guides
+
+```
+
+
+### Between technical replicates
+
+```{r guide_correlations}
+
+#add your own code for checking correlations between replicates
+
+```
+
+
+# Results
+
+## From RRA algorithm
+Here I am looking at enriched genes (postive scores) in Treatment Versus Control
+
+### Read data
+```{r readDataRRA1}
+
+# define the comparison_name here; for example, (this should match file names)
+# comparison_name='demo'
+comparison_name='kyse140-azd-t1_vs_kyse140-dmso-t1'
+
+
+# define file names 
+#Get stats file for all genes
+gene_summary_file = paste('../MAGeCK_RRA_output/results/test/',comparison_name,'.gene_summary.txt',sep='')
+#Get stats file for all guides
+sgrna_summary_file = paste('../MAGeCK_RRA_output/results/test/',comparison_name,'.sgrna_summary.txt',sep='')
+
+# read in the guide and gene level results for RRA comparison defined above
+gstable = read.table(gene_summary_file,header = T,as.is = T,na.strings='')
+sg_table = read.table(sgrna_summary_file,header = T,as.is = T,na.strings='')
+
+
+```
+
+### Results tables
+Summarise results 
+```{r}
+
+# Results summaries
+
+#The statistics of comparisons is as indicated in the following table.This uses the genreporttablefucntion defined in the functions section of this script at the top.  
+cptable = genreporttable(comparison_name,gstable)
+
+
+kable(cptable,caption='Comparison summary')
+
+
+```
+
+The meanings of the columns are as follows.
+
+-   Comparison: The label for comparisons;
+-   Genes: The number of genes in the library;
+-   Selection: The direction of selection, either positive selection or
+    negative selection;
+-   FDR1%: The number of genes with FDR \< 1%;
+-   FDR5%: The number of genes with FDR \< 5%;
+-   FDR25%: The number of genes with FDR \< 25%;   
+
+   
+Interactive results table 
+
+```{r warning = FALSE}
+
+DT::datatable(gstable)
+
+```
+
+### Plots
+Set list of genes to plot
+
+```{r}
+
+#Set FDR for plots
+#FDR cutoff is used to draw a boundary line in RRA or p value plots. Set it to -1 to disable the boundary line.
+fdrcutoff=0.1
+
+# get the top 20 Results from column 12 (positive rank) - change the column to get the negative scores, or alter the top number of genes 
+
+targetgenelist_pos = gstable[gstable[,12]<20,1]
+
+# or, directly specify the genes to be plotted
+#targetgenelist_pos = c("ACTR8","ACIN1")
+
+# display genes used in the plot
+print(targetgenelist_pos)
+
+```
+
+#### Distributions of RRA Scores and p values 
+The following figure plots the distribution of RRA scores across these genes. Dotted lines represent the FDR cutoff line defined by the "fdrcutoff" value.
+
+```{r RRAscore_distribution}
+
+#get positive score from column 9
+startindex = 9
+
+# get postive fdr from column 11 
+fdrcolumn = 11
+
+plot_rra_or_p_scores(gstable,
+                     startindex,
+                     fdrcolumn,
+                     target_list = targetgenelist_pos, 
+                     xlab='Genes',
+                     ylab='RRAscore',
+                     main='RRA scores for treatment versus control \n(postive selection)') 
+
+
+```
+
+The following figure plots the distribution of p values in these genes.
+Dotted lines represent the FDR cutoff line defined by the "fdrcutoff".
+
+```{r pvalue_distribution}
+
+# get p value from column 10 
+startindex = 10
+
+#get fdr from column 11
+fdrcolumn = 11
+
+
+plot_rra_or_p_scores(gstable,
+                     startindex,
+                     fdrcolumn,
+                     target_list = targetgenelist_pos, 
+                     xlab='Genes',
+                     ylab='p value',
+                     main=paste('P values distribution in',
+                                comparison_name))
+
+```
+
+
+## From MLE algorithm
+
+### Results tables
+
+NB This section is all based on running an MLE analysis using a design matrix where day0 is set as baseline and all conditions (control time 1, control time 2, drug-treated time 1, drug-treated time 2) are compared to baseline i.e. 
+
+Samples	baseline	dmso-t1	azd-t1	dmso-t2	azd-t2
+kyse30-day0	1	0	0	0	0
+kyse30-dmso-t1	1	1	0	0	0
+kyse30-dmso-t2	1	0	0	1	0
+kyse30-azd-t1	1	0	1	0	0
+kyse30-azd-t2	1	0	0	0	1
+
+
+
+```{R}
+
+# Load data 
+MLE_res <- read.table("/results/test/kyse140_versus_baseline_comparisons.gene_summary.txt", header = T) 
+
+# make indivdual tables of beta values, p values and FDR values 
+betaVals <- select(MLE_res, Gene, sgRNA, dmso.t1.beta, dmso.t2.beta, azd.t1.beta, azd.t2.beta)
+
+pVals <- select(MLE_res, Gene, sgRNA, dmso.t1.p.value, dmso.t2.p.value, azd.t1.p.value, azd.t2.p.value)
+
+fdrVals <- select(MLE_res, Gene, sgRNA, dmso.t1.fdr, dmso.t2.fdr, azd.t1.fdr, azd.t2.fdr)
+
+
+```
+
+Beta scores
+
+```{r warning = FALSE}
+
+DT::datatable(betaVals)
+
+```
+
+P values
+
+```{r warning = FALSE}
+
+DT::datatable(pVals)
+```
+
+FDR values
+
+```{r warning = FALSE}
+
+DT::datatable(fdrVals)
+```
+
+### Hit lists
+
+There are a few ways to select hits e.g.  All genes that have a postive beta score and FDR \<0.2 in treated samples, time point 2. 
+
+```{r}
+
+#top hits in drug t2 = 
+#apply an FDR of 20%, and beta score must be positive 
+#just filter the results table with your criteria: 
+tophits <- filter(MLE_res, 
+                  azd.t2.fdr <0.2 & 
+                    azd.t2.beta >0)
+
+#make an interactive data table
+DT::datatable(tophits)
+
+```
+
+A better method might be e.g. All genes that have a positive beta score and FDR \<0.2 in drug T2,and are not significant in DMSO T2 (i.e. specfic to drug selection).  
+
+NB I can do this becuase all conditions were compared with the baseline in the design matrix
+
+```{r}
+
+#top in drug-treated t2 and not selected in control (i.e. specifically selected under to drug selective pressure) and must be postive
+specific_tophits <- filter(MLE_res, 
+                           azd.t2.fdr <0.2 & 
+                             dmso.t2.fdr >0.2 & 
+                             azd.t2.beta >0)
+
+
+DT::datatable(specific_tophits)
+
+```
+
+
+### GSEA
+
+GSEA analysis of the ranked beta scores to highlight enriched pathways. 
+   
+NB Any GSEA needs a ranked gene list, and a set of gene lists, to look for gene enrichment. 
+   
+NB Here I run a GSEA on genes ranked according to their positive beta scores, and then select the pathways with a positive enrichment score. Therefore this tests for enrichment of pathways amongst genes that are positvely selected for. If you rank genes based on postivie and negative beta scores, the significant pathways are all  essential, and the interesting signal is dominated by drop out of essential genes. 
+
+```{r }
+
+#GSEA
+#First get a ranked  gene list to feed to GSEA (rank by beta score or FDR)
+scores <- 
+  dplyr::select(MLE_res, 
+                Gene, 
+                beta_score) %>% 
+  # Here I only use positive beta scores 
+  filter(beta_score>0)
+
+#Convert gene names to Entrez IDs (or EnsembleIDs)
+#get a list of entrezIDs
+entrezIDs <- 
+  mapIds(org.Hs.eg.db, scores$Gene, 'ENTREZID', 'SYMBOL') %>% 
+  as.data.frame() %>% 
+  rownames_to_column()
+
+colnames(entrezIDs) <- c("Gene", "EntrezID")
+
+#add entrezIDs to scores table
+scores <- left_join(scores, entrezIDs, by = "Gene")
+
+#Make final ranked gene list
+## get the first feature, a  numeric vector
+geneList <- scores$beta_score
+
+## get the second feature, a named vector
+names(geneList) <- as.character(scores$EntrezID)
+
+## now put in  decreasing order
+geneList <- sort(geneList, decreasing = TRUE) 
+
+
+#Second get a list of canonical pathways e.g. Hallmark, KEGG, Reactome
+cn2gene <- 
+  msigdbr(species = "Homo sapiens", # set species
+          category = "C2") %>% # code for category e.g. C1 corresponds to Hallmark?
+  dplyr::select(gs_name, entrez_gene)
+
+
+#run GSEA -feed the above two tables to the GSEA function 
+gsea.res <- GSEA(geneList, TERM2GENE = cn2gene, by = "fgsea", seed = TRUE,  pvalueCutoff = 0.05)
+
+#get dataframe of results for up to 10 top results 
+gsea.df <- fortify(gsea.res, 
+              showCategory = 20, #how many levels to show - top 20 here
+              split=NULL) %>% filter(NES>0) # only want postive enrichment scores
+
+DT::datatable(gsea.df)
+
+
+```
+
+### Plots
+#### Heatmaps
+I use these to visualise beta scores for genes that I have picked as hits. 
+
+```{r heatmap_betavalues_tophits, warning = FALSE, fig.height = 15}
+
+#select gene list to plot
+tophits <- filter(MLE_res, azd.t2.fdr <0.2 & dmso.t2.fdr >0.2 & azd.t2.beta >0)
+
+#set up plotting matrix - filter beta values to only include top hits
+plotTab <- filter(MLE_res, 
+                  Gene %in% azdt2_specific_tophits$Gene) %>% 
+  #select columns in the order i want to plot them in the heatmap
+  select(Gene, dmso.t1.beta, dmso.t2.beta, azd.t1.beta, azd.t2.beta)
+
+#convert plotting table to a matrix that can feed into pheatmap function
+plotMat <- column_to_rownames(plotTab, "Gene") %>% as.matrix()
+
+#make column names more readable for final plot
+colnames(plotMat)<-colnames(plotMat) %>% 
+  gsub("dmso.t1.beta","DMSO Time 1",.)%>% 
+  gsub("azd.t1.beta","AZD5363 Time 1",.)%>% 
+  gsub("azd.t2.beta","AZD5363 Time 2",.)%>% 
+  gsub("dmso.t2.beta","DMSO Time 2",.)
+
+#set colour scheme
+breaks <- c(seq(-3, 3, length.out = 101)) %>% 
+  #set a gradient of blue to white to red 
+    `names<-`(colorRampPalette(c(palblues, "white",  "white", "white", palreds))(101))
+
+#Plot heatmap
+
+pheatmap(plotMat,  
+         cluster_cols = FALSE,
+         cluster_rows = TRUE,
+         cutree_rows = 2,
+         show_rownames = TRUE, 
+         breaks = breaks,
+         color= names(breaks),
+         border_color=NA)
+        
+
+
+```
+
+#### Volcano plots 
+
+The default cut-off for log2FC is \>\|1.5\|; the default cut-off for P value is
+10e-3.
+
+```{r  volcano_betavalues,  warning = FALSE, fig.height = 10}
+
+#read results in that I want to plot 
+MLE_res <- read.table("../MAGeCK_runs/MLE_method/results/test/kyse140_versus_baseline_comparisons.gene_summary.txt", header = T) 
+
+#select conditions to plot 
+plotTab <- dplyr::select(MLE_res,Gene,  azd.t2.beta, azd.t2.fdr) %>% column_to_rownames("Gene")
+
+#plot volcanoe with enhanced volcano package
+ EnhancedVolcano(plotTab,
+    lab = rownames(plotTab),
+    x = 'azd.t2.beta',
+    y = 'azd.t2.fdr',
+    ylab = bquote(~-Log[10]~ 'adj. p value'),
+    xlab = bquote(~Log[2]~ 'fold change (Beta score)'),
+    title = 'KYSE140 AZD Timepoint 2',
+    pCutoff = 10e-3,
+    FCcutoff = 1.5,
+    legendPosition = 'right',
+    legendLabSize = 12,
+    legendIconSize = 4.0,
+    drawConnectors = TRUE,
+    widthConnectors = 0.75, 
+    boxedLabels = TRUE,
+    max.overlaps = 200)
+ 
+ #wihtout labels 
+ EnhancedVolcano(plotTab,
+                 lab = NA, 
+    x = 'azd.t2.beta',
+    y = 'azd.t2.fdr',
+    ylab = bquote(~-Log[10]~ 'adj. p value'),
+    xlab = bquote(~Log[2]~ 'fold change (Beta score)'),
+    title = 'KYSE140 AZD Timepoint 2',
+    pCutoff = 10e-3,
+    FCcutoff = 1.5,
+    legendPosition = 'right',
+    legendLabSize = 12,
+    legendIconSize = 4.0,
+    drawConnectors = TRUE,
+    widthConnectors = 0.75, 
+    max.overlaps = 200)
+ 
+ 
+ 
+```
+
+
+#### Guides for top hits 
+Check that the guide distributions for the top hits you have chosen look sensible
+```{r  guide_plots_for_top_hits,  warning = FALSE}
+
+
+#load in data from an RRA run
+
+sgrna_summary_file = paste('../results/test/control_versus_treated.sgrna_summary.txt',sep='')
+
+sg_table = read.table(sgrna_summary_file,header = T,as.is = T,na.strings='')
+
+collabel = c("kyse30-day0", "kyse30-azd-t2")
+
+#The following figure shows the distribution of sgRNA read counts (normalized) of selected genes in selected samples.
+
+for(target_gene in tophits$Gene[1:20]){
+  
+  plotindvidualsgrnas(sg_table, target_gene, collabel)
+}
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
