@@ -20,33 +20,37 @@ Welcome to the Han Lab, we hope you are settling in! In addition to the Cambridg
 
 First and foremost, make sure you are set up on all communication channels:
 
-1.  Make sure you are all set up on Microsoft Teams and Outlook for emails and video calls.
+1.  Make sure you are all set up on Microsoft Teams and Outlook for emails and video calls. Make sure you have been added to the Han Teams Channel (we discuss all lab-related things here) and also to the sub-channel for the server you use (mti-01, 02 or 03).
 
 2.  Download Zoom (we use this for group meetings).
 
-3.  Get yourself added to the group mailing list: ask [admin\@milner.cam.ac.uk](mailto:admin@milner.cam.ac.uk){.email}.
+3.  If you are starting a Postdoc position, get yourself added to the postdoc mailing list. Contact Nikki Mann (Digital Communications Manager) at [ndo23\@cam.ac.uk](mailto:ndo23@cam.ac.uk){.email}.
 
-4.  If you are starting a Postdoc position, get yourself added to the postdoc mailing list. Contact Nikki Mann (Digital Communications Manager) at [ndo23\@cam.ac.uk](mailto:ndo23@cam.ac.uk){.email}.
+4.  Get added to the group Whatsapp (ask one of the admins: Holly, Namshik or Gehad).
 
-5.  Join the group [Slack](http://hanlabhq.slack.com/) workspace.
+5.  Note down the lab phone number (this will ring the phone on Namshik's desk): 01223 767079
 
-6.  Get added to the group Whatsapp (ask one of the admins: Holly, Namshik, Gehad or Georgia).
+6.  Make sure you share any news/updates from us i.e., new paper, talks, posters, big progress, new projects etc.
 
-7.  Note down the lab phone number (this will ring the phone on Namshik's desk): 01223 767079
-
-8.  Make sure you share any news/updates from us i.e., new paper, talks, posters, big progress, new projects etc.
+7.  Decide when you will come to the office, and book your seat.
 
 ## VPN
 
 Download and connect to the VPN client.
 
-[Mac VPN install instructions](https://drive.google.com/file/d/15WQCUhgbiPUqYSQH5HUNV92ZWpHYgCiU/view?usp=sharing)
+[Mac VPN install instructions](https://help.uis.cam.ac.uk/service/network-services/remote-access/uis-vpn/macos)
 
-[Windows VPN install instructions](https://drive.google.com/file/d/15bdy09xoGYTiLP4vMl4Xjj5VXDZDh74M/view?usp=sharing)
+[Windows VPN install instructions](https://help.uis.cam.ac.uk/service/network-services/remote-access/uis-vpn/windows10)
+
+NB the instructions here are for setting up the Cambridge UNi VPN. You need to slightly alter them to set up for the JCBC:
+
+-   Setup a token as it describes
+
+-   THen setup the VPN connection but instead use address **vpn.jcbc.cam.ac.uk**
 
 ## Download R
 
-If you plan to run most of your analyses with R, you will need to download the following:
+If you plan to run most of your analyses with R, you will need to download the following to be able to run R locally:
 
 Get access to R [here](https://www.stats.bris.ac.uk/R/).
 
@@ -65,15 +69,17 @@ Get access to RStudio [here](https://www.rstudio.com/products/rstudio/download/#
 
 If you're going to run high-throughput analyses or store large amounts of data, you need access to the servers.
 
-We currently have access to two servers (a third is coming soon!):
+We currently have access to three servers :
 
-**mti-ai-srv-01** and **mti-ai-srv-02**
+**mti-ai-srv-01** , 02 and 03
 
-**mti-ai-srv-02** is the newer of the two, with more storage space and greater computational power, for more experienced users. `sudo` rights are given to most users of **mti-ai-srv-01** but not in **mti-ai-srv-02**, so if you need to install additional software you will need to contact the server maintainer (see below).
+**mti-ai-srv-02 and 03** are the newest, with more storage space and greater computational power, for more experienced users. `sudo` rights are given to most users of **mti-ai-srv-01** but not in **mti-ai-srv-02 and 03**, so if you need to install additional software you will need to contact the server maintainer (see below).
 
-To access either server, make sure you have contacted whoever is maintaining the server (see below) and asked them to make you an account. Once you have an account, you can connect as follows:
+You should also make an account on the University HPC - use the central cluster to store backups of all your data, and you can run anlayses on here when the servers are busy for example.
 
-1\. Connect to the VPN
+To access any of the MTI servers, make sure you have contacted whoever is maintaining the server (see below) and ask them to make you an account. Once you have an account, you can connect as follows:
+
+1\. Connect to the JCBC VPN
 
 2\. Access the server by typing (with your raven username)
 
@@ -83,39 +89,63 @@ or
 
 `ssh username@mti-ai-srv-02.jcbc.private.cam.ac.uk`
 
+or
+
+`ssh username@mti-ai-srv-03.jcbc.private.cam.ac.uk`
+
 3\. For initial log in you need to set a password
 
 First type:
 
-`passwd`
+`passwd or password` (it will be one of the two)
 
 Then set your new password.
 
-4\. When you initially log in you will be in your `/home/username` directory. You can run your pipelines here.
+4\. When you initially log in you will be in your `/home/username` directory. You can run your pipelines here. Make sure you do not save data in this directory - each user is not allowed more than 50Gb - if you keep lots of data here it will slow server activity for everyone else.
 
-5.  The home directories in both servers are too small if you need to storage large amounts of data. To store your data:
+5.  NB The home directories in all servers are too small if you need to storage large amounts of data. To store your data:
     1.  On mti-01: `cd /mnt/raid0_data/` or `/mnt/raid5_data` and create a dir with your username
 
     2.  On mti-02: `cd` to `/data/username`. This is where you can store your data. If this directory is missing, contact the person who maintains the server and ask them to make one for you.
 
+    3.  On mti-03: `cd` to `/data/username`. This is where you can store your data. If this directory is missing, contact the person who maintains the server and ask them to make one for you.
+
 **Server maintenance:**
 
-Gehad Youssef ([gy260\@cam.ac.uk](gy260@cam.ac.uk)) maintains `mti-ai-srv-01` and Fatima Baldo ([fmhb2\@cam.ac.uk](mailto:fmhb2@cam.ac.uk){.email}) currently maintains `mti-ai-srv-02`. Contact them if you need help. If you are taking over as a server maintainer, see also the Server Maintenance document (contact Holly).
+Gehad Youssef ([gy260\@cam.ac.uk](gy260@cam.ac.uk)) maintains `mti-ai-srv-01`
+
+Fatima Baldo ([fmhb2\@cam.ac.uk](mailto:fmhb2@cam.ac.uk){.email}) maintains `mti-ai-srv-02`.
+
+Holly Giles (harg2\@cam.ac.uk) and Jaesub Park ([jp2079\@cam.ac.uk](mailto:jp2079@cam.ac.uk){.email}) maintain `mti-ai-srv-02`
+
+Contact them if you need help. Please make sure you contact the relevant person.
+
+See also, the server maintenance document:
 
 ## Server etiquette and house rules
 
 We have a few basic house rules for the servers:
 
-1.  In general mti-02 is reserved for jobs that require greater computational power, and for more experienced users.
-2.  Be reasonable with allocation of resources on either server.
-3.  Take care when deleting any data as there are no backups.
-4.  Take care when deleting software, check that no one else is using this first.
-5.  Keep back ups of your raw data on a separate hard drive.
+1.  In general mti-02 and 03 is reserved for jobs that require greater computational power, and for more experienced users.
+2.  Be reasonable with allocation of resources on either server:
+    1.  Do not use more than 50GB in your /home folder, and preferably much less
+    2.  Try not to use more than 10Tb in you /data folder
+    3.  Be sensible with the number of CPU and GPU cores
+3.  Keep all data on the HPC as well as on the server, and also on a hard drive in case of future incidents
+4.  Take care when deleting any data as there are no backups.
+5.  Take care when deleting software, check that no one else is using this first.
 6.  Aim to use git version control on your scripts, as there are no backups of the server.
+7.  Be communicative - share problems and solutions on the Teams Channel
 
 ## R on the server
 
-When you need to run analyses in R that require more computational power, you can use RStudio on the server. Access RStudio [here](http://mti-ai-srv-01.jcbc.private.cam.ac.uk:8787) for mti-01 and [here](http://mti-ai-srv-02.jcbc.private.cam.ac.uk:8787) for mti-02 and log in with the same details you used when you set up server access. You will be able to access all files and data stored on `mti-ai-srv-01` and `mti-ai-srv-02`from here.
+When you need to run analyses in R that require more computational power, you can use RStudio on the server.
+
+First ssh using port forwarding (change server number as required)  
+
+ssh -L 8787:localhost:8787 yourCRSID[\@mti-ai-srv-02.jcbc.private.cam.ac.uk](mailto:sl2105@mti-ai-srv-02.jcbc.private.cam.ac.uk "mailto:sl2105@mti-ai-srv-02.jcbc.private.cam.ac.uk")
+
+Then go to your browser and go to localhost:8787 for RStudio and log in with the same details you used when you set up server access. You will be able to access all files and data stored on the servers from here.
 
 ## Version control
 

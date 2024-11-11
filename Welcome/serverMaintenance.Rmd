@@ -20,7 +20,7 @@ Here are some basic instructions and advice for maintaining the servers:
 
 1.  Add the user: `sudo add user USERID`
 2.  Type in your password
-3.  Create a password for the new user
+3.  Create a password for the new user (usually passwd)
 4.  Check that this successfully created a user directory `cd /home/USERID`
 5.  On mti-01
     1.  Create data folder: `cd /mnt/raid0_data/` or `/mnt/raid5_data` then `mkdir USERID`
@@ -30,44 +30,49 @@ Here are some basic instructions and advice for maintaining the servers:
     1.  Create data folder `cd /data/`then `sudo mkdir USERID`
 
     2.  Make user the owner of data folder `sudo chown USERID`
+7.  On mti-03
+    1.  Create data folder `cd /data/`then `sudo mkdir USERID`
 
-# Check memory usage 
-You can check the capacity left in /home and /data by running `df -h`   
-/dev/sdb2 corresponds to  /home    
+    2.  Make user the owner of data folder `sudo chown USERID`
+
+# Check storage capacity regularly 
+
+You can check the capacity left in /home and /data by running `df -h`\
+/dev/sdb2 corresponds to /home\
 /deve/sda1 corresponds to /data
 
+You can check how much individual users are taking up in either with
 
-You can check how much individual users are taking up in either with 
+`sudo du -hs /home/*` and `sudo du -hs /data/*`
 
-`sudo du -hs /home/* ` and `sudo du -hs /data/*`
+Make sure no one is using more than 50 Gb in their /home folder
 
-Make sure no one is using more than 50Gb in home
+Make sure no one is using more than 10Tb in their /data folder
 
 # Restarting the server
-The server is scheduled to be rebooted on: 
 
-Wed 5th July 2023 - Midnight    
-Sunday 15th January 2024 - Midnight    
-Wednesday 10th July 2024 - Midnight    
+You will need to schedule a reboot (ask Ivan in IT), every 6 months. Send round a calendar invite and give everyone 24 hour notice.
 
-You will need to schedule more, every 6 months and give eveyrone 24 hour notice. 
+# Communications
+
+There is a Teams chat for each server, please use to discuss server-related issues.
+
+For any issues, contact JCBC IT Support [it\@jcbc.cam.ac.uk](mailto:it@jcbc.cam.ac.uk){.email}, address it to IVan
 
 # Checking processing and Killing jobs
 
-Check what jobs are taking up the most resources with: `top` 
+Check what jobs are taking up the most resources with: `top`
 
-If a job is taking up too many resources, or too much time, you can kill it as follows: `kill` followed by the PID 
-
+If a job is taking up too many resources, or too much time, you can kill it as follows: `kill` followed by the PID
 
 # Installing new software
 
-You can install new software with `pip install` and `conda install`. If you want to installation to be system wide, and not just for yourself, you can `sudo` first. 
-
+You can install new software with `pip install` and `conda install`. If you want to installation to be system wide, and not just for yourself, you can `sudo` first.
 
 # Updating software and keeping security up to date
-Once a year you shoudl go to Ivan in IT and get him to  run `sudo apd update` to update software and keep security up to date
 
+Once a year you should go to Ivan in IT and get him to run `sudo apd update` to update software and keep security up to date
 
 # Setting up jupiter notebooks for users
 
-You can find a tutorial for setting up a Jupyter notebook [here](https://www.dropbox.com/s/nh21x2f2bzcw9ya/Jupyter%20Notebook%20on%20the%20server-20230119_120326-Meeting%20Recording.mp4?dl=0). 
+You can find a tutorial for setting up a Jupyter notebook [here](https://www.dropbox.com/s/nh21x2f2bzcw9ya/Jupyter%20Notebook%20on%20the%20server-20230119_120326-Meeting%20Recording.mp4?dl=0).
