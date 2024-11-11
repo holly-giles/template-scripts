@@ -12,11 +12,13 @@ output:
 
 # Welcome to the Han lab
 
-Welcome to the Han Lab, we hope you are settling in! In addition to the Cambridge University and MTI inductions, here are some helpful tips to get you up and running in our lab (Free free to skip points if you find they are irrelevant to you).
+Welcome to the Han Lab, we hope you are settling in! In addition to the Cambridge University and MTI inductions, here are some helpful tips to get you up and running in our lab (Free free to skip points if you find they are irrelevant to you). Get access also to the [Group Dropbox](https://www.dropbox.com/home/Han%20Lab%20Resources?share_manage_access=false), where you will find more useful resources.
+
+## 
 
 ------------------------------------------------------------------------
 
-## Communications
+## Communications 
 
 First and foremost, make sure you are set up on all communication channels:
 
@@ -174,6 +176,10 @@ Then check out some packages from Bioconductor e.g. `DESeq2` (For analysing tran
 You can check out the vignette by running: `browseVignettes("DESeq2")`
 
 Finally, for reproducibility purposes, it is often good practice to run analyses in [RMarkdown](https://rmarkdown.rstudio.com), and render html and pdf documents containing the results. The RMarkdown [Vignette](https://rmarkdown.rstudio.com/lesson-1.html) and [Cheatsheet](https://rmarkdown.rstudio.com/lesson-15.html) are good starting points.
+
+## Presentations
+
+Please add all slides / posters to the [Dropbox](https://www.dropbox.com/home/Han%20Lab%20Resources?share_manage_access=false) 
 
 ------------------------------------------------------------------------
 
