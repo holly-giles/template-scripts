@@ -22,13 +22,13 @@ Welcome to the Han Lab, we hope you are settling in! In addition to the Cambridg
 
 First and foremost, make sure you are set up on all communication channels:
 
-1.  Make sure you are all set up on Microsoft Teams and Outlook for emails and video calls. Make sure you have been added to the Han Teams Channel (we discuss all lab-related things here) and also to the sub-channel for the server you use (mti-01, 02 or 03).
+1.  Make sure you are all set up on Microsoft Teams and Outlook for emails and video calls. Make sure you have been added to the **Han Teams Channel** (we discuss all lab-related things here, ask Namshik if you are not in there) and also add yourself to the sub-channel for the server you use (mti-01, 02 or 03).
 
 2.  Download Zoom (we use this for group meetings).
 
 3.  If you are starting a Postdoc position, get yourself added to the postdoc mailing list. Contact Nikki Mann (Digital Communications Manager) at [ndo23\@cam.ac.uk](mailto:ndo23@cam.ac.uk){.email}.
 
-4.  Get added to the group Whatsapp (ask one of the admins: Holly, Namshik or Gehad).
+4.  Get added to the group WhatsApp at this [link](https://chat.whatsapp.com/HzUecfkaw4c3AoZeSldHUg) (or ask one of the admins: Holly, Namshik or Gehad).
 
 5.  Note down the lab phone number (this will ring the phone on Namshik's desk): 01223 767079
 
@@ -44,11 +44,15 @@ Download and connect to the VPN client.
 
 [Windows VPN install instructions](https://help.uis.cam.ac.uk/service/network-services/remote-access/uis-vpn/windows10)
 
-NB the instructions here are for setting up the Cambridge UNi VPN. You need to slightly alter them to set up for the JCBC:
+NB The instructions here are for setting up the Cambridge Uni VPN. You need to slightly alter them to set up for the JCBC:
 
--   Setup a token as it describes
+-   First contact Ivan at [it\@jcbc.cam.ac.uk](mailto:it@jcbc.cam.ac.uk){.email} and ask to be added to the list of users for the JCBC VPN
 
--   THen setup the VPN connection but instead use address **vpn.jcbc.cam.ac.uk**
+-   Then follow the insturctions:
+
+    -   Setup a token as it describes
+
+    -   Then setup the VPN connection but with address **vpn.jcbc.cam.ac.uk, rather than the one quoted**
 
 ## Download R
 
@@ -118,7 +122,7 @@ Gehad Youssef ([gy260\@cam.ac.uk](gy260@cam.ac.uk)) maintains `mti-ai-srv-01`
 
 Fatima Baldo ([fmhb2\@cam.ac.uk](mailto:fmhb2@cam.ac.uk){.email}) maintains `mti-ai-srv-02`.
 
-Holly Giles (harg2\@cam.ac.uk) and Jaesub Park ([jp2079\@cam.ac.uk](mailto:jp2079@cam.ac.uk){.email}) maintain `mti-ai-srv-02`
+Holly Giles (harg2\@cam.ac.uk) and Jaesub Park ([jp2079\@cam.ac.uk](mailto:jp2079@cam.ac.uk){.email}) maintain `mti-ai-srv-03`
 
 Contact them if you need help. Please make sure you contact the relevant person.
 

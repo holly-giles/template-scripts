@@ -18,7 +18,7 @@ Here are some basic instructions and advice for maintaining the servers:
 
 # Adding a new account
 
-1.  Add the user: `sudo add user USERID`
+1.  Add the user: `sudo adduser USERID`
 2.  Type in your password
 3.  Create a password for the new user (usually passwd)
 4.  Check that this successfully created a user directory `cd /home/USERID`
@@ -33,7 +33,7 @@ Here are some basic instructions and advice for maintaining the servers:
 7.  On mti-03
     1.  Create data folder `cd /data/`then `sudo mkdir USERID`
 
-    2.  Make user the owner of data folder `sudo chown USERID`
+    2.  Make user the owner of data folder `sudo chown USERID USERID`
 
 # Check storage capacity regularly 
 
