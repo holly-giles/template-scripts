@@ -1,0 +1,367 @@
+---
+title: "Investigating DE"
+author: "Holly A. R. Giles"
+date: "`r doc_date()`"
+output:
+  BiocStyle::html_document:
+      toc: yes
+      toc_depth: 3
+      toc_float: yes
+      code_folding: "hide" 
+---
+
+# Set up 
+
+```{r loadLibraries, include=FALSE}
+
+
+library(patchwork)
+library(ggplot2)
+library(cowplot)
+library(tidyverse)
+library(Seurat)
+library(ggplot2)
+library(speckle)
+
+
+```
+
+```{r setup, include=FALSE}
+
+#Load a processed Seurat object 
+load(file = "../../Seurat_object.RData")
+
+# Annotate UMAP (if not already)
+anno.combined <- RenameIdents(libs.combined, 
+                              "0" = "Ciliated", 
+                              "1" = "Ciliated", 
+                              "2" = "Club/Goblet",
+                              "3" = "Suprabasal",
+                              "4" = "Basal-Club-Ciliated Mixture",
+                              "5" = "Basal", 
+                              "6" = "Ciliated" , 
+                              "7" = "Club/Goblet with inflammation", 
+                              "8" = "Ciliated",
+                              "9" = "Basal_Club?",  
+                              "10" = "Ionocyte", 
+                              "11" = "Proliferating Basal", 
+                              "12" = "Proliferating Ciliated",
+                              "13" = "Ciliated",
+                              "14" = "Mixed, maybe Tuft", 
+                              "15" = "Ciliated") 
+
+
+
+knitr::opts_chunk$set(
+  tidy = TRUE,
+  tidy.opts = list(width.cutoff = 95),
+  fig.width = 10)
+ 
+set.seed(1996)
+
+```
+
+
+
+
+```{r defineAesthetics, include=FALSE, warning = FALSE }
+
+source("../../R/themes_colors.R")
+
+
+#NB i think the best colour schemes come from the ArchR package: 
+
+
+clusterColors <- ArchRPalettes$bear
+
+#or
+namedclusterColors <-  
+  list("Ciliated" = "#FF0000", #(Red)
+       "Club/Goblet" = "#FFFF00", #(Yellow)
+       "Suprabasal" = "#00FF00", #(Lime Green)
+       "Basal-Club-Ciliated Mixture" = "#008000", #(Dark Green)
+       "Basal" = "#00FFFF", #(Cyan)
+       "Basal_Club?" = "#FF00FF",# (Magenta)
+       "Club/Goblet with inflammation" = "#0000FF", #(Blue)
+       "Ionocyte" = "#800080",# (Purple)
+       "Proliferating Basal" = "#FFC0CB",# (Pink)
+       "Proliferating Ciliated" = "#bf2837", #(Maroon)
+       "Mixed, maybe Tuft" = "#5e3106", #(brown)
+       "Ciliated" = "#000000" #(Black)
+  
+)
+
+
+```
+
+
+# UMAP
+Replot UMAP
+
+```{r celltype_annotatedUMAP_splitby_sample,  fig.height=10, fig.width=12}
+
+DefaultAssay(anno.combined) <- "integrated"
+DimPlot(anno.combined, split.by = "sampleType", ncol = 3,repel = TRUE, cols = namedclusterColors) 
+
+
+
+```
+
+# Changes in cellular proportions
+## Barplots to show proportions of cell types
+```{r cellTypeProportions, fig.height = 5, fig.width = 12 }
+
+
+#add ggplot manual colour scheme 
+
+pdf(file = "../../proportions.pdf", width = 12, height = 5 )
+
+plotCellTypeProps(anno.combined,
+                  clusters = Idents(anno.combined), 
+                  sample =  anno.combined$sampleType) + 
+  theme_bw() +
+  
+  scale_fill_manual("legend", values = namedclusterColors) +
+  coord_flip()
+
+dev.off()
+
+```
+
+
+
+## Barplots to show proportions of one particular cell type
+```{r cellTypeProportionsAbbasal, fig.height = 5, fig.width = 12}
+
+#edit the function
+barplotProportion <-
+
+  function (x = NULL, clusters = NULL, sample = NULL) 
+{
+    if (is.null(x) & is.null(sample) & is.null(clusters)) 
+        stop("Please provide either a SingleCellExperiment object or Seurat\n          object with required annotation metadata, or explicitly provide\n          clusters,  sample information")
+    if ((is.null(clusters) | is.null(sample)) & !is.null(x)) {
+        if (is(x, "SingleCellExperiment")) 
+            y <- .extractSCE(x)
+        if (is(x, "Seurat")) 
+            y <- .extractSeurat(x)
+        clusters <- y$clusters
+        sample <- y$sample
+    }
+    prop.list <- getTransformedProps(clusters, sample)
+    Proportions <- as.vector(t(prop.list$Proportions))
+    Samples <- rep(colnames(prop.list$Proportions), nrow(prop.list$Proportions))
+    Clusters <- rep(rownames(prop.list$Proportions), each = ncol(prop.list$Proportions))
+    plotdf <- data.frame(Samples = Samples, Clusters = Clusters, 
+        Proportions = Proportions)
+    
+    ###EDIT YOUR CELL TYPE HERE
+    plotdf2 <- filter(plotdf, Clusters == "Ciliated")
+    ggplot(plotdf2, aes(x = Samples, y = Proportions, fill = Clusters)) + 
+        geom_bar(stat = "identity") + theme(axis.text.x = element_text(size = 12), 
+        axis.text.y = element_text(size = 12), axis.title = element_text(size = 14), 
+        legend.text = element_text(size = 12), legend.title = element_text(size = 14))
+}
+
+
+pdf(file = "../../presentationPlots/proportions_ciliatedonly.pdf", width = 12, height = 5 )
+
+barplotProportion(anno.combined,
+                  clusters = Idents(anno.combined), 
+                  sample =  anno.combined$sampleType) + t1 +
+  
+  scale_fill_manual("legend", values = namedclusterColors) + coord_flip()
+
+dev.off()
+
+
+
+```
+
+
+# Differential expression testing
+## One cell type versus another 
+
+```{r }
+
+#DE testing must be on raw RNA data 
+DefaultAssay(anno.combined) <- "RNA"
+
+# find all markers distinguishing aberrant basaloid from ciliated
+ab.markers_ciliated <- FindMarkers(anno.combined, 
+                                   ident.1 = "Aberrant basaloid",
+                                   ident.2 = "Ciliated", 
+                                   min.pct = 0.25)
+
+
+DT::datatable(ab.markers_ciliated)
+
+top8 <- ab.markers_ciliated %>% slice_max(n = 8, order_by = avg_log2FC)
+
+
+#get a list of feature plots
+featurePlotList <- FeaturePlot(ab.markers_ciliated, 
+                               features = row.names(top8), 
+                               min.cutoff = "q9")
+  
+
+
+```
+
+## Treated versus untreated / Mutant versus Control 
+```{r}
+
+#add a slot for cell types nad treatment status
+#make a copy 
+anno.combined2 <- anno.combined
+
+#make a new identity that is combination of cell type and cell treatment
+anno.combined2$celltype.stim <- paste(Idents(anno.combined2), anno.combined2$treatment, sep = "_")
+
+
+#Save the current identity (cell type) in a slot call cell type
+anno.combined2$celltype <- Idents(anno.combined2)
+
+#switch current identities to cell type and treatment status
+Idents(anno.combined2) <- "celltype.stim"
+
+#make sure are using RNA data for DE testing 
+DefaultAssay(anno.combined2) <- "RNA"
+
+ab.NTCU.response <- FindMarkers(anno.combined2, 
+                                ident.1 = "Aberrant basaloid_Control", 
+                                ident.2 = "Aberrant basaloid_10uM", verbose = FALSE)
+
+head(ab.NTCU.response, n = 15)
+
+```
+
+# Differential expression visualisations 
+## Scatter plots 
+```{r}
+
+theme_set(theme_cowplot())
+
+# subset to just the cell type of interest
+ab.cells <- subset(anno.combined, idents = "Aberrant basaloid")
+
+#make the identity the treatment / mutant status
+Idents(ab.cells) <- "treatment"
+
+#get a dataframe of average gene expression for each gene in this population of cells 
+avg.ab.cells <- as.data.frame(log1p(AverageExpression(ab.cells, verbose = FALSE)$RNA))
+
+#add a column with the gene name
+avg.ab.cells$gene <- rownames(avg.ab.cells)
+
+
+colnames(avg.ab.cells) <- c("Low", "Treated", "Control")
+
+genes.to.label = row.names(ab.NTCU.response)[1:15]
+
+# plot a scatted plot of control treatd cells versus treated cells, label top 15 genes
+p1 <- ggplot(avg.ab.cells, aes(Control, Treated)) + geom_point() + ggtitle("Abberant basaloid")
+p1 <- LabelPoints(plot = p1, points = genes.to.label, repel = TRUE)
+
+p1
+```
+
+## Features plots 
+```{r}
+
+#edit this with genes to plot: 
+features_to_plot <- row.names(ab.NTCU.response)[1:15]
+
+plots <- 
+FeaturePlot(anno.combined2, 
+            features = features_to_plot, 
+            split.by = "treatment", 
+            max.cutoff = 3,
+            cols = c("grey", "pink" , "red"))
+
+# show plots with titles 
+plots[[1]] + ggtitle(row.names(ab.NTCU.response)[1])
+plots[[2]] + ggtitle(row.names(ab.NTCU.response)[2])
+plots[[3]] + ggtitle(row.names(ab.NTCU.response)[3])
+plots[[4]] + ggtitle(row.names(ab.NTCU.response)[4])
+plots[[5]] + ggtitle(row.names(ab.NTCU.response)[5])
+
+```
+
+
+
+## Violin plots 
+
+```{r}
+
+#edit this with genes to plot: 
+features_to_plot <- row.names(ab.NTCU.response)[1:15]
+
+plots <- VlnPlot(anno.combined2, 
+                 features = features_to_plot, 
+                 split.by = "treatment", 
+                 group.by = "celltype",
+                 pt.size = 0, 
+                 combine = FALSE)
+
+plots
+
+```
+
+
+## Heatmaps
+```{r}
+
+#for all heatmaps we need scaled RNA data
+#as we are comparing gene expression, we need to use the unaltered RNA data
+DefaultAssay(anno.combined) <- "RNA"
+
+#then we need to scale for these genes 
+rnascaled <- anno.combined
+
+rnascaled <- ScaleData(rnascaled)
+
+
+```
+
+```{r fig.width= 10}
+
+#Define list of genes to plot e.g. get a list of top 100 makrer genes in each cluster, order my log2FC
+
+top100 <- markers %>% 
+  group_by(cluster) %>% 
+  slice_max(n = 100, order_by = avg_log2FC)
+
+#e.g. select top100 markers for cluster 4 
+genestoplot <- filter(top100, cluster == "4")$gene
+
+
+#pdf(file = "../../figs/top100_markers_heatmap.pdf", width = 15, height = 10 )
+
+#make sure colours match UMAP e.g. use this pallette clusterColors <- ArchRPalettes$bear
+
+DoHeatmap(rnascaled, 
+          features = genestoplot, 
+          cells = 1:2000, 
+          size = 4,
+          angle = 90, 
+          group.colors = c("Ciliated" = "#FF0000", #(Red)
+                           "Club/Goblet" = "#FFFF00", #(Yellow)
+                           "Suprabasal" = "#00FF00", #(Lime Green)
+                           "Aberrant basaloid?" = "#008000", #(Dark Green)
+                           "Basal" = "#00FFFF", #(Cyan)
+                           "Basal_Club?" = "#FF00FF",# (Magenta)
+                           "Club/Goblet with inflammation" = "#0000FF", #(Blue)
+                           "Ionocyte" = "#800080",# (Purple)
+                           "Proliferating Basal" = "#FFC0CB",# (Pink)
+                           "Proliferating Ciliated" = "#bf2837", #(Maroon)
+                           "Mixed, maybe Tuft" = "#5e3106", #(brown)
+                           "Ciliated" = "#000000" #(Black)
+  ))
+
+#dev.off()
+
+
+
+
+```

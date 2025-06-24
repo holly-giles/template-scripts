@@ -1,0 +1,108 @@
+---
+title: "Heatmap of Markers / DE Genes "
+author: "Holly A. R. Giles"
+date: "`r doc_date()`"
+output:
+  BiocStyle::html_document:
+      toc: yes
+      toc_depth: 3
+      toc_float: yes
+      code_folding: "hide" 
+---
+
+# Set up 
+
+```{r setup, include=FALSE}
+
+#Load a Seurat object - this should be completely processed ie been through all Seurat steps
+load(file = "/../../Seurat_object.RData")
+
+
+knitr::opts_chunk$set(
+  tidy = TRUE,
+  tidy.opts = list(width.cutoff = 95),
+  fig.width = 10)
+ 
+set.seed(1996)
+
+```
+
+```{r loadLibraries, include=FALSE}
+
+
+library(patchwork)
+library(ggplot2)
+library(cowplot)
+library(tidyverse)
+library(Seurat)
+library(ggplot2)
+
+
+```
+
+
+```{r defineAesthetics, include=FALSE, warning = FALSE }
+
+#set the colour schemes and themes 
+source("../../R/themes_colors.R")
+
+
+```
+
+# Heatmap
+```{r fig.width= 10}
+
+#Define list of genes to plot, from Figure 2C Adams et al 2020 
+Adamsetal <- c("ЕРСАМ", "CDH1", "VIM", "FN1", "IICOL1A1", "CDH2", "TNC", "VCAN", "PCP4", "CUX2", "SPINK1", "PRSS2", "СРА6", "CTSE", "MMP7", "MDK", "GDF15", "PTGS2", "SLCO2A1", "ЕРНВ2", "IITGB8", "ITGAV", "ITGB6", "TGFBI", "KCNN4", "KCNQ5", "KCNS3", "CDKN1A", "COKN2A", "CDKN2B", "CCND1", "CCND2", "MDM2", "HMGA2", "PTCHD4", "OCIAD2")
+
+# ANnoate UMAP (If processed Suerat object not already labelled) 
+
+anno.combined <- RenameIdents(libs.combined, 
+                              "0" = "Ciliated", 
+                              "1" = "Ciliated", 
+                              "2" = "Club/Goblet",
+                              "3" = "Suprabasal",
+                              "4" = "Aberant basaloid?",
+                              "5" = "Basal", 
+                              "6" = "Ciliated" , 
+                              "7" = "Club/Goblet with inflammation", 
+                              "8" = "Ciliated",
+                              "9" = "Basal_Club?",  
+                              "10" = "Ionocyte", 
+                              "11" = "Proliferating Basal", 
+                              "12" = "Proliferating Ciliated",
+                              "13" = "Ciliated",
+                              "14" = "Mixed, maybe Tuft", 
+                              "15" = "Ciliated") 
+
+
+#Plot heatmap of gene expression for gene list, grouped by clsuter and split by condition 
+
+#switch toe integrated assay)
+DefaultAssay(anno.combined) <- "integrated"
+
+pdf(file = "../../figs/marker_heatmap.pdf", width = 15, height = 10 )
+
+DoHeatmap(anno.combined, features = Adamsetal, cells = 1:2000, size = 4,
+    angle = 90, group.colors = c("Ciliated" = "#FF0000", #(Red)
+       "Club/Goblet" = "#FFFF00", #(Yellow)
+       "Suprabasal" = "#00FF00", #(Lime Green)
+       "Aberant basaloid?" = "#008000", #(Dark Green)
+       "Basal" = "#00FFFF", #(Cyan)
+       "Basal_Club?" = "#FF00FF",# (Magenta)
+       "Club/Goblet with inflammation" = "#0000FF", #(Blue)
+       "Ionocyte" = "#800080",# (Purple)
+       "Proliferating Basal" = "#FFC0CB",# (Pink)
+       "Proliferating Ciliated" = "#bf2837", #(Maroon)
+       "Mixed, maybe Tuft" = "#5e3106", #(brown)
+       "Ciliated" = "#000000" #(Black)
+  ))
+dev.off()
+
+#split.by = "treatment"
+
+
+```
+
+
+
