@@ -1,0 +1,100 @@
+---
+title: "Heatmap_template"
+output: html_document
+date: "2025-09-18"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Scale Data
+
+```{r}
+
+####### SCALE DATA FOR HEATMAPS ########
+#NB you need the RNA data (rather than integrated) for heatmaps, and it needs to be scaled 
+
+#as we are comparing gene expression, we need to use the unaltered RNA data
+DefaultAssay(seurat_obj) <- "RNA"
+
+#then we need to scale for these genes 
+rnascaled <- ScaleData(seurat_obj)
+
+#subset scaled object 
+#or pick just atypical cells 
+rnascaled.atypical  <- subset(rnascaled, subset = celltype == "Atypical")
+
+#or pick just basal cells 
+rnascaled.basal  <- subset(rnascaled, subset = celltype %in% c("Suprabasal", "Basal", "Cycling Basal"))
+
+#or pick atypical and basal cells 
+rnascaled.basal.atypical  <- subset(rnascaled, subset = celltype %in% c("Atypical", "Suprabasal", "Basal", "Cycling Basal"))
+
+
+#Get gene lists - can also try reactome of kegg
+# Hallmark gene sets for Homo sapiens
+msigdb_df <- msigdbr(species = "Homo sapiens", category = "H")
+
+# Convert to a list format 
+msigdb_list <- split(msigdb_df$gene_symbol, msigdb_df$gs_name)
+
+
+
+
+
+```
+
+
+## Plot heatmap
+```{r heatmap_apoptosis_all_cells_rowcluster_Fig5, fig.path=plotDir, dev=c("png", "cairo_pdf"), fig.height = 20}
+
+# Select gene set
+features <- msigdb_list[["HALLMARK_APOPTOSIS"]]
+
+# Make sure RNA is active assay - swap to basal only / atypical only if needed 
+DefaultAssay(rnascaled) <- "RNA"
+
+# There are too many cells to plot all - so take a random subset of 2000 cells 
+set.seed(1996)
+anno.sub <- sample(colnames(rnascaled), 2000)
+
+# Extract scaled matrix from teh seurat object (genes x cells)
+# Make sure all genes in list are present in the scaled data
+genes.use <- intersect(features, rownames(rnascaled[["RNA"]]@scale.data))
+
+# Subset scaled data for these available genes and these sampled cells
+mat <- rnascaled[["RNA"]]@scale.data[genes.use, anno.sub]
+
+# Create annotation for columns (cells)
+anno.df <- data.frame(
+  sample = rnascaled@meta.data[anno.sub, "sample"]
+)
+rownames(anno.df) <- anno.sub
+
+# Order the cells by treatment
+cells.ordered <- anno.sub[order(anno.df$sample)]
+
+# Subset the matrix and annotation in the same order
+mat.ordered <- mat[, cells.ordered]
+anno.df.ordered <- anno.df[cells.ordered, , drop = FALSE]
+
+
+#pdf(file = file.path("../../../inst/fig/Fig5_all_cells_clustered_apoptosis_heatmap.pdf"), height = 20)
+pheatmap(
+  mat.ordered,
+  scale = "none",
+  cluster_rows = TRUE,
+  cluster_cols = FALSE,
+  show_rownames = TRUE,
+  show_colnames = FALSE,
+  annotation_col = anno.df.ordered,
+  fontsize_row = 6,
+  color = colorRampPalette(rev(brewer.pal(n = 7, "RdBu")))(100),
+  breaks = seq(-3, 3, length.out = 101)   # force centred at 0
+)
+#dev.off()
+
+
+
+```
