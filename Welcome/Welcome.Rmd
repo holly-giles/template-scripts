@@ -12,7 +12,7 @@ output:
 
 # Welcome to the Han lab
 
-Welcome to the Han Lab, we hope you are settling in! In addition to the Cambridge University and MTI inductions, here are some helpful tips to get you up and running in our lab (Free free to skip points if you find they are irrelevant to you). Get access also to the [Group Dropbox](https://www.dropbox.com/home/Han%20Lab%20Resources?share_manage_access=false), where you will find more useful resources.
+Welcome to the Han Lab, we hope you are settling in! In addition to the Cambridge University and MTI inductions, here are some helpful tips to get you up and running in our lab (Free free to skip points if you find they are irrelevant to you). Make sure you have access to the Han Lab Group folder on Teams (ask your manager if unsure).
 
 ## 
 
