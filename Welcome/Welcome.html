@@ -11,7 +11,7 @@
 
 <meta name="author" content />
 
-<meta name="date" content="2024-11-13" />
+<meta name="date" content="2025-10-17" />
 
 <title>MTI Computational Biology Group Induction</title>
 
@@ -1916,7 +1916,7 @@ function toggle_visibility(id1) {
 
 <h1 class="title toc-ignore">MTI Computational Biology Group Induction</h1>
 <p class="author-name"></p>
-<h4 class="date">13 November 2024</h4>
+<h4 class="date">17 October 2025</h4>
 
 </div>
 
@@ -1933,27 +1933,34 @@ function toggle_visibility(id1) {
 <p>First and foremost, make sure you are set up on all communication channels:</p>
 <ol style="list-style-type: decimal">
 <li><p>Make sure you are all set up on Microsoft Teams and Outlook for emails and video calls. Make sure you have been added to the <strong>Han Teams Channel</strong> (we discuss all lab-related things here, ask Namshik if you are not in there) and also add yourself to the sub-channel for the server you use (mti-01, 02 or 03).</p></li>
-<li><p>Download Zoom (we use this for group meetings).</p></li>
 <li><p>If you are starting a Postdoc position, get yourself added to the postdoc mailing list. Contact Nikki Mann (Digital Communications Manager) at <a href="mailto:ndo23@cam.ac.uk" class="email">ndo23@cam.ac.uk</a>.</p></li>
 <li><p>Get added to the group WhatsApp at this <a href="https://chat.whatsapp.com/HzUecfkaw4c3AoZeSldHUg">link</a> (or ask one of the admins: Holly, Namshik or Gehad).</p></li>
 <li><p>Note down the lab phone number (this will ring the phone on Namshik’s desk): 01223 767079</p></li>
 <li><p>Make sure you share any news/updates from us i.e., new paper, talks, posters, big progress, new projects etc.</p></li>
-<li><p>Decide when you will come to the office, and book your seat <a href="https://universityofcambridgecloud.sharepoint.com/:x:/r/sites/MILNER_MilnerTherapeuticsInstitute-MTIOnly/_layouts/15/Doc2.aspx?action=edit&amp;sourcedoc=%7B479f9759-4795-42e6-9087-0aed90b2b8f7%7D&amp;wdOrigin=TEAMS-MAGLEV.teamsSdk_ns.rwc&amp;wdExp=TEAMS-TREATMENT&amp;wdhostclicktime=1731318685926&amp;web=1&amp;wdLOR=cA4A23E66-8ADB-F34F-AE20-83E5306ACF2A">here</a>.</p></li>
+<li><p>Decide when you will come to the office, and book your seat on Booker.</p></li>
+<li><p>Make sure you always contact the relevant person about server issues:</p>
+<ol style="list-style-type: decimal">
+<li><p>General manager: Joanna Xie (jx303@cam.ac.uk) who can liase with Ivan in IT.</p></li>
+<li><p>Gehad Youssef (<a href="gy260@cam.ac.uk">gy260@cam.ac.uk</a>) maintains <code>mti-ai-srv-01</code></p></li>
+<li><p>Fatima Baldo (<a href="mailto:fmhb2@cam.ac.uk" class="email">fmhb2@cam.ac.uk</a>) maintains <code>mti-ai-srv-02</code>.</p></li>
+<li><p>Holly Giles (harg2@cam.ac.uk) and Jaesub Park (<a href="mailto:jp2079@cam.ac.uk" class="email">jp2079@cam.ac.uk</a>) maintain <code>mti-ai-srv-03</code></p></li>
+</ol></li>
 </ol>
 </div>
 <div id="vpn" class="section level2" number="1.3">
 <h2><span class="header-section-number">1.3</span> VPN</h2>
-<p>Download and connect to the VPN client.</p>
+<p>Download and connect to the VPN client to be able to access the servers in the JCBC when working remotely. You can follow the instructions below for setting up the Cambridge Uni VPN, but you need to slightly alter them to set up for the JCBC VPN:</p>
 <p><a href="https://help.uis.cam.ac.uk/service/network-services/remote-access/uis-vpn/macos">Mac VPN install instructions</a></p>
 <p><a href="https://help.uis.cam.ac.uk/service/network-services/remote-access/uis-vpn/windows10">Windows VPN install instructions</a></p>
-<p>NB The instructions here are for setting up the Cambridge Uni VPN. You need to slightly alter them to set up for the JCBC:</p>
+<p>Alterations:</p>
 <ul>
-<li><p>First contact Ivan at <a href="mailto:it@jcbc.cam.ac.uk" class="email">it@jcbc.cam.ac.uk</a> and ask to be added to the list of users for the JCBC VPN</p></li>
-<li><p>Then follow the insturctions:</p>
+<li><p>First contact Ivan at <a href="mailto:it@jcbc.cam.ac.uk" class="email">it@jcbc.cam.ac.uk</a> and ask to be added to the list of users for the JCBC VPN (you can say you need this to be able to access the MTI servers). They will most likely ask you to come to the IT office on the first floor of JCBC, at the back of the Stem Cell Institute (the mirror image office of the board room in the MTI). They will run a couple of security checks on your computer.</p></li>
+<li><p>One the VPN has been installed by IT, you can follow the instructions above:</p>
 <ul>
 <li><p>Setup a token as it describes</p></li>
 <li><p>Then setup the VPN connection but with address <strong>vpn.jcbc.cam.ac.uk, rather than the one quoted</strong></p></li>
 </ul></li>
+<li><p>Switch on the VPN any time you want to ssh to the server, or access R Studio on the server</p></li>
 </ul>
 </div>
 <div id="download-r" class="section level2" number="1.4">
@@ -1961,6 +1968,7 @@ function toggle_visibility(id1) {
 <p>If you plan to run most of your analyses with R, you will need to download the following to be able to run R locally:</p>
 <p>Get access to R <a href="https://www.stats.bris.ac.uk/R/">here</a>.</p>
 <p>Get access to RStudio <a href="https://www.rstudio.com/products/rstudio/download/#download">here</a>.</p>
+<p>You can also access R Studio on the servers, see below:</p>
 </div>
 <div id="access-servers-and-data-storage" class="section level2" number="1.5">
 <h2><span class="header-section-number">1.5</span> Access servers and data storage</h2>
@@ -1969,26 +1977,32 @@ function toggle_visibility(id1) {
 <p><strong>mti-ai-srv-01 , 02 and 03</strong></p>
 <p><strong>mti-ai-srv-02 and 03</strong> are the newest, with more storage space and greater computational power, for more experienced users. <code>sudo</code> rights are given to most users of <strong>mti-ai-srv-01</strong> but not in <strong>mti-ai-srv-02 and 03</strong>, so if you need to install additional software you will need to contact the server maintainer (see below).</p>
 <p>You should also <a href="https://www.hpc.cam.ac.uk/rcs-application?check_logged_in=1">make an account on the University HPC</a> - use the central cluster to store backups of all your data, and you can run analyses on here when the servers are busy for example.</p>
-<p>To access any of the MTI servers, make sure you have contacted whoever is maintaining the server (see below) and ask them to make you an account. Once you have an account, you can connect as follows:</p>
+<p>To get an account on server 1 or server 3:</p>
 <p>1. Connect to the JCBC VPN</p>
 <p>2. Access the server by typing (with your raven username)</p>
-<p><code>ssh username@mti-ai-srv-01.jcbc.private.cam.ac.uk</code></p>
-<p>or</p>
 <p><code>ssh username@mti-ai-srv-02.jcbc.private.cam.ac.uk</code></p>
 <p>or</p>
 <p><code>ssh username@mti-ai-srv-03.jcbc.private.cam.ac.uk</code></p>
-<p>3. For initial log in you need to set a password</p>
-<p>First type:</p>
-<p><code>passwd or password</code> (it will be one of the two)</p>
-<p>Then set your new password.</p>
+<p>Type your password - this is your raven password.</p>
 <p>4. When you initially log in you will be in your <code>/home/username</code> directory. You can run your pipelines here. Make sure you do not save data in this directory - each user is not allowed more than 50Gb - if you keep lots of data here it will slow server activity for everyone else.</p>
 <ol start="5" style="list-style-type: decimal">
-<li>To store your data:
-1. On mti-01: <code>cd /mnt/raid0_data/</code> or <code>/mnt/raid5_data</code> and create a dir with your username</li>
+<li><p>To store your data: 1. On mti-01: <code>cd /mnt/raid0_data/</code> or <code>/mnt/raid5_data</code> and create a dir with your username</p></li>
+<li><p>On mti-03: <code>cd</code> to <code>/data/username</code>. This is where you can store your data. If this directory is missing, contact the person who maintains the server and ask them to make one for you.</p></li>
 </ol>
-<pre><code>2.  On mti-02: `cd` to `/data/username`. This is where you can store your data. If this directory is missing, contact the person who maintains the server and ask them to make one for you.
-
-3.  On mti-03: `cd` to `/data/username`. This is where you can store your data. If this directory is missing, contact the person who maintains the server and ask them to make one for you.</code></pre>
+<p>To access server 2, make sure you have contacted whoever is maintaining the server (currently Fatima Baldo) and ask them to make you an account. Once you have an account, you can connect as follows:</p>
+<p>1. Connect to the JCBC VPN</p>
+<p>2. Access the server by typing (with your raven username)</p>
+<p><code>ssh username@mti-ai-srv-02.jcbc.private.cam.ac.uk</code></p>
+<p>and then type your password:</p>
+<p><code>passwd or password</code> (the server maintainer will have set as one of these, if not, contact them)</p>
+<p>3. For initial log in you need to set a new password</p>
+<p>First type:</p>
+<p><code>passwd</code></p>
+<p>Then set your new password.</p>
+<p>4. When you initially log in you will be in your <code>/home/username</code> directory. You can run your pipelines here. Make sure you do not save data in this directory - each user is not allowed more than 50Gb - if you keep lots of data here it will slow server activity for everyone else.</p>
+<ul>
+<li>To store your data On mti-02: <code>cd /data/</code> and create a dir with your username. This is where you can store your data. If this directory is missing, contact the person who maintains the server and ask them to make one for you.</li>
+</ul>
 <p><strong>Server maintenance:</strong></p>
 <p>Gehad Youssef (<a href="gy260@cam.ac.uk">gy260@cam.ac.uk</a>) maintains <code>mti-ai-srv-01</code></p>
 <p>Fatima Baldo (<a href="mailto:fmhb2@cam.ac.uk" class="email">fmhb2@cam.ac.uk</a>) maintains <code>mti-ai-srv-02</code>.</p>
@@ -2015,10 +2029,12 @@ function toggle_visibility(id1) {
 </div>
 <div id="r-on-the-server" class="section level2" number="1.7">
 <h2><span class="header-section-number">1.7</span> R on the server</h2>
-<p>When you need to run analyses in R that require more computational power, you can use RStudio on the server.</p>
-<p>First ssh using port forwarding (change server number as required)  </p>
-<p>ssh -L 8787:localhost:8787 yourCRSID<a href="mailto:sl2105@mti-ai-srv-02.jcbc.private.cam.ac.uk">@mti-ai-srv-02.jcbc.private.cam.ac.uk</a></p>
-<p>Then go to your browser and go to localhost:8787 for RStudio and log in with the same details you used when you set up server access. You will be able to access all files and data stored on the servers from here.</p>
+<p>When you need to run analyses in R that require more computational power, you can use RStudio on the server</p>
+<p>Log in to the VPN then go to:</p>
+<p><a href="https://mti-ai-srv-03.jcbc.private.cam.ac.uk" class="uri">https://mti-ai-srv-01.jcbc.private.cam.ac.uk</a></p>
+<p><a href="https://mti-ai-srv-03.jcbc.private.cam.ac.uk" class="uri">https://mti-ai-srv-02.jcbc.private.cam.ac.uk</a></p>
+<p><a href="https://mti-ai-srv-03.jcbc.private.cam.ac.uk" class="uri">https://mti-ai-srv-0.jcbc.private.cam.ac.uk</a></p>
+<p>Log in with the same details you used when you set up server access. You will be able to access all files and data stored on the servers from here. Its also useful to get a GUI interface on the file system on the servers</p>
 </div>
 <div id="version-control" class="section level2" number="1.8">
 <h2><span class="header-section-number">1.8</span> Version control</h2>
